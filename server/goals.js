@@ -115,6 +115,28 @@ function doneOn(userId, goalId, date) {
   return Boolean(row)
 }
 
+function currentStreak(userId, today) {
+  const rows = db
+    .prepare(
+      `SELECT DISTINCT date FROM checkins
+       WHERE user_id = ? ORDER BY date DESC`
+    )
+    .all(userId)
+  if (!rows.length) return 0
+
+  const done = new Set(rows.map(r => r.date))
+  let cursor = today
+  if (!done.has(cursor)) {
+    cursor = addDays(cursor, -1)
+  }
+  let streak = 0
+  while (done.has(cursor)) {
+    streak += 1
+    cursor = addDays(cursor, -1)
+  }
+  return streak
+}
+
 function enrichGoal(userId, row, date) {
   const goal = rowToGoal(row)
   const weekStart = mondayOf(date)
@@ -135,7 +157,8 @@ async function listGoals(req, res, user) {
 
   const rows = db.prepare('SELECT * FROM goals WHERE user_id = ? ORDER BY created_at ASC').all(user.id)
   const goals = rows.map(row => enrichGoal(user.id, row, date))
-  return send(res, 200, 0, 'success', { goals })
+  const streak = currentStreak(user.id, date)
+  return send(res, 200, 0, 'success', { goals, streak })
 }
 
 async function createGoal(req, res, user) {

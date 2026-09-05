@@ -22,7 +22,7 @@
           <text class="th-title">今日打卡</text>
           <view class="streak">
             <text class="fire">✦</text>
-            <text>已坚持 12 天</text>
+            <text>已坚持 {{ streak }} 天</text>
           </view>
         </view>
         <view class="done-chip" :class="{ all: doneNum === visibleGoals.length && visibleGoals.length > 0 }">
@@ -75,6 +75,7 @@ export default {
     return {
       dateLabel: '',
       goals: [],
+      streak: 0,
       loading: true
     }
   },
@@ -122,6 +123,7 @@ export default {
         const date = this.dateStr(new Date())
         const data = await get(`/goals?date=${date}`)
         this.goals = data.goals || []
+        this.streak = data.streak || 0
       } catch (err) {
         // 请求层已提示
       } finally {
