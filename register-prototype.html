@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>移动端注册页 · 高保真交互原型</title>
+<style>
+  :root{
+    --primary:#0FA968;
+    --primary-deep:#047857;
+    --grad-2:#37D67F;
+    --ink:#111827;
+    --sub:#5F6B84;
+    --sub-2:#93A0B8;
+    --line:#E6EAF2;
+    --field:#F1F4F9;
+    --bg:#F7F9FC;
+    --ok:#12A150;
+    --err:#E5484D;
+    --err-bg:#FEF1F2;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:
+      radial-gradient(1000px 560px at 12% -10%, #DDF9EA 0%, rgba(221,249,234,0) 60%),
+      radial-gradient(900px 620px at 112% 118%, #D7F7EC 0%, rgba(215,247,236,0) 55%),
+      #EAF3EC;
+    display:grid;
+    place-items:center;
+    overflow:hidden;
+  }
+  /* ================= 舞台（整体随视口等比缩放，保证一屏截图） ================= */
+  .workspace{
+    position:relative;
+    width:1340px;
+    height:800px;
+    display:grid;
+    grid-template-columns:616px 1fr;
+    align-items:stretch;
+    gap:34px;
+    transform-origin:center center;
+  }
+
+  /* ---------- 左侧：设计说明 ---------- */
+  .panel{
+    background:rgba(255,255,255,.82);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.95);
+    border-radius:28px;
+    padding:26px 26px 20px;
+    box-shadow:0 30px 70px -34px rgba(24,94,62,.36);
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:2.6px;
+    color:var(--primary);
+    text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:3px;background:linear-gradient(135deg,var(--primary),var(--grad-2));box-shadow:0 0 0 4px rgba(16,185,129,.16)}
+  .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-top:10px}
+  h1{font-size:25px;font-weight:800;letter-spacing:.2px;line-height:1.25}
+  .head-row p{font-size:12.5px;color:var(--sub);line-height:1.6;margin-top:5px}
+  .head-meta{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;width:150px}
+  .head-meta span{
+    font-size:10.5px;color:#4D5870;background:#EEF1F9;border:1px solid #E2E7F2;
+    padding:4px 8px;border-radius:99px;font-weight:600;letter-spacing:.3px;white-space:nowrap;
+  }
+  .notes-head{display:flex;align-items:baseline;justify-content:space-between;margin:17px 2px 6px}
+  .notes-head h2{font-size:13px;font-weight:800;letter-spacing:1.2px;color:#273149}
+  .notes-head span{font-size:10.5px;color:#8A96AC}
+  .note-list{display:flex;flex-direction:column;justify-content:space-evenly;flex:1 1 auto;min-height:0}
+  .note{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    width:100%;
+    text-align:left;
+    background:transparent;
+    border:1px solid transparent;
+    border-radius:14px;
+    padding:10px 10px;
+    cursor:pointer;
+    font-family:inherit;
+    transition:background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+  }
+  .note:hover{background:#F1FBF6;border-color:#C9F2DF}
+  .note:active{transform:scale(.99)}
+  .note.is-active{
+    background:linear-gradient(90deg,#E9FAF1,#F0FBF6);
+    border-color:#A7E8C4;
+    box-shadow:0 8px 18px -12px rgba(16,185,129,.45);
+  }
+  .num{
+    flex:0 0 24px;
+    width:24px;height:24px;
+    display:grid;place-items:center;
+    border-radius:50%;
+    font-size:11px;font-weight:800;
+    color:#fff;
+    background:linear-gradient(135deg,var(--primary),var(--grad-2));
+    box-shadow:0 4px 10px -3px rgba(13,148,90,.55);
+    transition:transform .18s ease;
+  }
+  .note:hover .num{transform:scale(1.12)}
+  .note-body{flex:1;min-width:0}
+  .note-title{display:block;font-size:13.5px;font-weight:700;color:#1B2438;line-height:1.35}
+  .note-desc{display:block;font-size:11.2px;color:#6A7590;line-height:1.52;margin-top:2px}
+  .note-go{color:#A9B2C8;font-size:13px;transition:transform .18s ease,color .18s ease}
+  .note:hover .note-go{color:var(--primary);transform:translateX(2px)}
+  .try-box{
+    flex:0 0 auto;
+    margin:6px 0 0;
+    background:#F4FBF7;
+    border:1px dashed #BBE9D1;
+    border-radius:16px;
+    padding:11px 12px 12px;
+  }
+  .try-head{display:flex;align-items:baseline;justify-content:space-between}
+  .try-head h2{font-size:11px;font-weight:800;letter-spacing:1.2px;color:#33405F}
+  .try-head span{font-size:10px;color:#96A1B8}
+  .try-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
+  .try-chip{
+    appearance:none;cursor:pointer;font-family:inherit;text-align:center;
+    font-size:10.5px;font-weight:700;color:#316E51;letter-spacing:.2px;
+    background:#FFFFFF;border:1px solid #DCEFE5;border-radius:11px;
+    padding:7px 2px 6px;
+    box-shadow:0 2px 6px -3px rgba(24,94,62,.18);
+    transition:transform .14s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .try-chip:hover{color:#0B9D60;border-color:#86EFAC;transform:translateY(-1px);box-shadow:0 6px 12px -6px rgba(16,185,129,.45)}
+  .try-chip:active{transform:scale(.96)}
+  .try-chip em{display:block;font-style:normal;font-size:8.5px;color:#A1ABC0;font-weight:600;margin-top:2px;letter-spacing:.2px}
+  .palette{
+    margin-top:auto;
+    padding-top:12px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .palette-label{font-size:10px;font-weight:700;color:#9AA5BA;letter-spacing:1.5px;margin-right:2px;white-space:nowrap}
+  .palette span.tok{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:10px;font-weight:600;color:#65708A;
+    background:#F5F7FC;border:1px solid #EAEEF6;border-radius:8px;padding:4px 7px;
+    white-space:nowrap;
+  }
+  .palette .dot{width:10px;height:10px;border-radius:3.5px;flex:0 0 auto}
+
+  /* ---------- 右侧：设备预览区 ---------- */
+  .device-zone{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;min-width:0;
+  }
+  .device-toolbar{
+    display:flex;align-items:center;justify-content:space-between;
+    width:378px;color:#5B6478;
+  }
+  .live{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:.8px;color:#46506A}
+  .live i{width:7px;height:7px;border-radius:50%;background:#25C26E;box-shadow:0 0 0 4px rgba(37,194,110,.16);animation:livePulse 1.8s infinite}
+  @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .device-tools{display:flex;gap:7px}
+  .tool-btn{
+    appearance:none;cursor:pointer;font-family:inherit;
+    font-size:11px;font-weight:700;color:#4B5670;
+    background:rgba(255,255,255,.85);border:1px solid rgba(151,163,189,.38);
+    border-radius:99px;padding:6px 12px;
+    box-shadow:0 3px 10px -5px rgba(50,66,110,.25);
+    transition:all .18s ease;
+  }
+  .tool-btn:hover{border-color:#B8C3E4;transform:translateY(-1px)}
+  .tool-btn.on{background:#14532D;color:#fff;border-color:#14532D}
+
+  /* ---------- 手机 ---------- */
+  .device{
+    position:relative;
+    width:378px;height:752px;
+    background:#12141A;
+    border:1px solid #000;
+    border-radius:58px;
+    padding:9px;
+    box-shadow:
+      0 0 0 2px #2A2E38,
+      0 42px 90px -28px rgba(24,34,64,.72),
+      0 14px 38px -18px rgba(24,34,64,.5),
+      inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+  .device.hl-frame{outline:2.5px dashed var(--primary);outline-offset:8px;animation:zonePulse 1.2s ease 2}
+  .screen{
+    position:relative;
+    width:100%;height:100%;
+    background:
+      radial-gradient(640px 320px at 92% -5%, rgba(16,185,129,.16), rgba(16,185,129,0) 58%),
+      radial-gradient(560px 300px at -8% 2%, rgba(74,222,128,.12), rgba(74,222,128,0) 55%),
+      linear-gradient(180deg,#F8F9FE 0%,#F5F7FC 100%);
+    border-radius:50px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .statusbar{
+    position:relative;z-index:3;
+    display:flex;align-items:center;justify-content:space-between;
+    height:34px;padding:0 26px;
+    color:#141A28;font-size:12px;font-weight:700;
+    letter-spacing:.3px;
+  }
+  .sb-icons{display:flex;align-items:center;gap:5px}
+  .battery{position:relative;width:19px;height:9px;border:1px solid #394155;border-radius:2.5px;padding:1.5px;margin-left:2px}
+  .battery::after{content:"";position:absolute;right:-3px;top:2.5px;width:1.5px;height:4px;background:#394155;border-radius:0 2px 2px 0}
+  .battery b{display:block;width:72%;height:100%;background:#141A28;border-radius:1px}
+  .content{
+    position:relative;z-index:2;
+    flex:1;
+    display:flex;flex-direction:column;
+    padding:12px 27px 14px;
+    min-height:0;
+  }
+  /* 装饰光斑 */
+  .blob{position:absolute;border-radius:50%;filter:blur(10px);pointer-events:none}
+  .blob.b1{width:130px;height:130px;background:rgba(16,185,129,.15);top:-38px;right:-28px}
+  .blob.b2{width:90px;height:90px;background:rgba(74,222,128,.12);top:92px;left:-44px}
+  .blob.b3{width:150px;height:150px;background:rgba(134,239,172,.14);bottom:76px;right:-70px}
+
+  .brand{display:flex;align-items:center;gap:9px;position:relative}
+  .logo{
+    width:34px;height:34px;border-radius:11px;
+    background:linear-gradient(135deg,#22C55E 0%,#0BA360 100%);
+    display:grid;place-items:center;
+    box-shadow:0 7px 16px -6px rgba(10,150,90,.55);
+    color:#fff;flex:0 0 auto;
+  }
+  .logo svg{width:17px;height:17px}
+  .word{font-size:16px;font-weight:800;letter-spacing:.2px;color:#171C28}
+  .word small{display:block;font-size:8.5px;font-weight:700;letter-spacing:1.8px;color:#9BA6BC;text-transform:uppercase;margin-top:1px}
+  .hello{margin-top:26px;position:relative}
+  .hello h2{font-size:29px;font-weight:800;letter-spacing:.5px;color:#101828;line-height:1.25}
+  .hello p{margin-top:7px;font-size:13px;color:#68738C;line-height:1.55}
+  .hello p b{color:#48536D;font-weight:700}
+
+  .login-form{margin-top:20px;display:flex;flex-direction:column;min-height:0;flex:1}
+  .fgroup{display:flex;flex-direction:column;gap:0;position:relative}
+  .fgroup + .fgroup{margin-top:9px}
+  .flabel{
+    display:block;font-size:12px;font-weight:700;color:#3D465C;
+    margin:0 0 6px 3px;letter-spacing:.3px;
+  }
+  .flabel em{font-style:normal;color:#C03A3F;margin-left:2px}
+  .field{
+    position:relative;
+    display:flex;align-items:center;gap:9px;
+    height:52px;
+    background:#FFFFFF;
+    border:1.5px solid #E4E8F1;
+    border-radius:15px;
+    padding:0 13px;
+    transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;
+  }
+  .field .f-icon{color:#98A3BA;flex:0 0 auto;display:grid;place-items:center;transition:color .2s ease}
+  .field .f-icon svg{width:18px;height:18px}
+  .field input{
+    flex:1;min-width:0;height:100%;
+    border:0;outline:0;background:transparent;
+    font-family:inherit;font-size:14.5px;color:#172033;letter-spacing:.2px;
+  }
+  .field input::placeholder{color:#ABB4C8}
+  .field input::-ms-reveal{display:none}
+  .field:focus-within{
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(16,185,129,.14);
+    background:#FFFDFF;
+  }
+  .field:focus-within .f-icon{color:#059669}
+  .clear-btn{
+    display:none;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:50%;
+    border:0;cursor:pointer;color:#9BA5BA;
+    background:#EEF1F7;flex:0 0 auto;
+    transition:all .15s ease;
+  }
+  .clear-btn:hover{background:#E2E7F2;color:#5E6880}
+  .clear-btn.show{display:grid}
+  .clear-btn svg{width:10px;height:10px}
+  .eye-btn{
+    display:grid;place-items:center;width:30px;height:30px;margin-right:-4px;
+    border:0;background:transparent;border-radius:9px;cursor:pointer;color:#98A3BA;
+    transition:color .2s ease,background .15s ease;
+  }
+  .eye-btn:hover{color:#5A657D;background:#F1F3F9}
+  .eye-btn svg{width:18px;height:18px}
+  .eye-off-icon{display:none}
+  .field.pwd-visible .eye-on-icon{display:none}
+  .field.pwd-visible .eye-off-icon{display:block}
+  .fmsg{
+    display:flex;align-items:center;gap:4px;
+    min-height:17px;margin-top:4px;padding-left:3px;
+    font-size:10.8px;font-weight:600;color:var(--err);
+    opacity:0;transform:translateY(-2px);
+    transition:opacity .18s ease,transform .18s ease;
+  }
+  .fmsg svg{width:10px;height:10px;flex:0 0 auto}
+  .fgroup.has-error .fmsg{opacity:1;transform:translateY(0)}
+  .fgroup.has-error .field{border-color:var(--err);background:#FFFCFC}
+  .fgroup.has-error .field:focus-within{box-shadow:0 0 0 4px rgba(229,72,77,.12)}
+  .fgroup.shake .field{animation:shake .42s ease}
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}40%{transform:translateX(5px)}
+    60%{transform:translateX(-4px)}80%{transform:translateX(3px)}
+  }
+  .forgot-row{
+    display:flex;align-items:center;justify-content:flex-end;
+    margin-top:7px;min-height:20px;
+  }
+  .switch-row{justify-content:center;gap:2px;margin-top:2px}
+  .link-btn{
+    border:0;background:none;cursor:pointer;font-family:inherit;
+    font-size:12px;font-weight:700;color:var(--primary-deep);
+    padding:5px 6px;border-radius:8px;
+    transition:color .15s ease,background .15s ease;
+  }
+  .link-btn:hover{color:#047857;background:#ECFDF5}
+  .link-btn:active{transform:scale(.98)}
+  .link-btn.ghost{color:#7C879E;font-weight:600}
+  .link-btn.ghost:hover{color:#4D5A76;background:#EEF1F6}
+
+  .submit-row{position:relative;margin-top:10px}
+  .btn{
+    position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;height:54px;border:0;border-radius:17px;
+    background:linear-gradient(135deg,#22C55E 0%,#10B981 55%,#047857 100%);
+    color:#fff;font-family:inherit;font-size:15.5px;font-weight:800;letter-spacing:1px;
+    cursor:pointer;
+    box-shadow:0 14px 26px -10px rgba(13,148,90,.55), inset 0 1px 0 rgba(255,255,255,.28);
+    transition:transform .14s ease,box-shadow .2s ease,filter .2s ease;
+  }
+  .btn:hover{filter:brightness(1.05);box-shadow:0 16px 30px -10px rgba(13,148,90,.62)}
+  .btn:active{transform:scale(.975)}
+  .btn.loading{pointer-events:none;filter:saturate(.75)}
+  .btn svg.arrow{width:15px;height:15px;transition:transform .2s ease}
+  .btn:hover svg.arrow{transform:translateX(3px)}
+  .ripple{
+    position:absolute;border-radius:50%;background:rgba(255,255,255,.45);
+    transform:scale(0);animation:ripple .6s ease-out forwards;pointer-events:none;
+  }
+  @keyframes ripple{to{transform:scale(3.4);opacity:0}}
+  .spinner{display:none;width:17px;height:17px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite}
+  .btn.loading .spinner{display:block}
+  .btn.loading .btn-arrow{display:none}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn.loading .btn-copy::after{content:"正在注册…"}
+  .btn.loading .btn-copy .btn-text{display:none}
+
+  .assist-row{
+    margin-top:auto;
+    display:flex;align-items:center;justify-content:center;gap:4px;
+    padding-top:8px;
+  }
+  .agreement{
+    font-size:10.5px;color:#98A3B8;line-height:1.6;
+    border:0;background:none;font-family:inherit;cursor:pointer;padding:4px 3px;border-radius:6px;
+  }
+  .agreement:hover{color:#059669}
+  .dot-sep{color:#C6CDDC}
+
+  .home-indicator{
+    position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
+    width:112px;height:4px;border-radius:2px;background:rgba(15,19,32,.22);z-index:8;pointer-events:none;
+  }
+
+  /* ---------- 成功态 ---------- */
+  .success-view{
+    position:absolute;inset:0;z-index:20;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#FBFCFE 0%,#F2F5FB 100%);
+    opacity:0;visibility:hidden;
+    transition:opacity .35s ease,visibility .35s ease;
+  }
+  .screen.logged .success-view{opacity:1;visibility:visible}
+  .success-card{
+    display:flex;flex-direction:column;align-items:center;
+    padding:0 34px;text-align:center;transform:translateY(8px);
+    transition:transform .45s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .screen.logged .success-card{transform:translateY(0)}
+  .check-circle{
+    width:86px;height:86px;border-radius:50%;
+    background:linear-gradient(135deg,#34D17C,#12A150);
+    display:grid;place-items:center;color:#fff;
+    box-shadow:0 24px 48px -18px rgba(18,161,80,.75),0 0 0 14px rgba(38,190,110,.12);
+    position:relative;
+  }
+  .check-circle svg{width:40px;height:40px}
+  .check-ring{
+    position:absolute;inset:-11px;border-radius:50%;
+    border:1.5px dashed rgba(18,161,80,.5);
+    animation:spin 9s linear infinite;
+  }
+  .success-view h3{margin-top:26px;font-size:22px;font-weight:800;color:#111827}
+  .success-view .who{margin-top:6px;font-size:12.5px;color:#6A7590}
+  .success-view .who b{color:#3D465C}
+  .success-note{margin-top:16px;font-size:10.5px;color:#8E99AE;background:#EEF1F8;border-radius:99px;padding:5px 12px}
+  .btn.ghost-btn{
+    width:auto;padding:0 24px;margin-top:24px;height:46px;font-size:13px;font-weight:700;letter-spacing:.4px;
+    background:transparent;color:#059669;box-shadow:none;border:1.5px solid #A7E8C4;
+  }
+  .btn.ghost-btn:hover{background:#ECFDF5;filter:none}
+
+  /* ---------- 标注与高亮 ---------- */
+  [data-zones].hl{border-radius:14px;outline:2px dashed rgba(16,185,129,.92);outline-offset:4px;animation:zonePulse 1.15s ease 2}
+  .hl .field,.hl.field{border-color:var(--primary)}
+  @keyframes zonePulse{
+    0%{outline-color:rgba(16,185,129,.95)}
+    50%{outline-color:rgba(16,185,129,.3)}
+    100%{outline-color:rgba(16,185,129,.95)}
+  }
+  .spot{
+    display:none;position:absolute;z-index:15;
+    width:17px;height:17px;border-radius:50%;
+    background:linear-gradient(135deg,#22C55E,#0BA360);
+    border:1.5px solid #fff;color:#fff;
+    font-size:9px;font-weight:800;font-style:normal;
+    align-items:center;justify-content:center;
+    box-shadow:0 3px 8px -1px rgba(13,94,58,.5);
+    cursor:pointer;
+    transition:transform .15s ease;
+  }
+  .spot:hover{transform:scale(1.35)}
+  .device.show-spots .spot{display:flex}
+  .s-brand{left:2px;top:-12px}
+  .s-account{right:-9px;top:-9px}
+  .s-password{right:-9px;top:-9px}
+  .s-btn{right:8px;top:-11px}
+  .s-forgot{right:-9px;top:-10px}
+  .s-touch{right:6px;bottom:2px}
+  .s-feedback{right:2px;top:-8px}
+  [data-pos]{position:relative}
+
+  /* ---------- Toast / 演示气泡 ---------- */
+  .toast{
+    position:absolute;z-index:60;top:52px;left:50%;
+    transform:translate(-50%,-8px);
+    display:flex;align-items:center;gap:7px;
+    background:rgba(23,29,46,.92);color:#fff;
+    font-size:11px;font-weight:600;letter-spacing:.2px;
+    padding:9px 14px;border-radius:99px;
+    box-shadow:0 12px 26px -8px rgba(20,26,50,.5);
+    opacity:0;pointer-events:none;
+    transition:opacity .22s ease,transform .22s ease;
+    max-width:86%;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast svg{width:13px;height:13px;color:#8BE6B5;flex:0 0 auto}
+</style>
+</head>
+<body>
+
+<div class="workspace" id="workspace">
+
+  <!-- ============ 左：设计说明 ============ -->
+  <aside class="panel">
+    <div class="eyebrow">High-fidelity Prototype</div>
+    <div class="head-row">
+      <div>
+        <h1>移动端注册页 · 高保真原型</h1>
+        <p>账号密码注册 · 极简表单配合实时校验、加载与跳转的完整闭环</p>
+      </div>
+      <div class="head-meta">
+        <span>390 × 844</span>
+        <span>账号 + 密码</span>
+        <span>注册即跳转</span>
+      </div>
+    </div>
+
+    <div class="notes-head">
+      <h2>设计说明 · DESIGN NOTES</h2>
+      <span>点击条目，在右侧预览中高亮对应区域</span>
+    </div>
+
+    <div class="note-list" id="noteList">
+      <button class="note" data-note="1">
+        <span class="num">1</span>
+        <span class="note-body">
+          <span class="note-title">首屏节奏 · 单一任务的克制动线</span>
+          <span class="note-desc">品牌区 + 一句价值说明后直接进入注册任务；无冗余信息，转化路径一目了然。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="2">
+        <span class="num">2</span>
+        <span class="note-body">
+          <span class="note-title">账号输入 · 格式与语义四态反馈</span>
+          <span class="note-desc">常态 / 聚焦 / 填充 / 错误四态齐全；标签常显，输入即校验格式并就地修正，语义不失。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="3">
+        <span class="num">3</span>
+        <span class="note-body">
+          <span class="note-title">密码输入 · 明文 / 掩码一键切换</span>
+          <span class="note-desc">眼睛按钮热区 ≥ 44px；回车键可直接提交注册，降低移动端键盘切换成本。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="4">
+        <span class="num">4</span>
+        <span class="note-body">
+          <span class="note-title">主按钮 · 校验 → 注册中 → 成功闭环</span>
+          <span class="note-desc">按下有缩放 + 波纹；注册中禁用防重复提交；成功后对勾收尾并引导前往登录。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="5">
+        <span class="num">5</span>
+        <span class="note-body">
+          <span class="note-title">校验反馈 · 就近、温和、可恢复</span>
+          <span class="note-desc">错误就近显示于字段下方并轻微抖动，不弹窗打断；保留已输入内容，修正成本最低。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="6">
+        <span class="num">6</span>
+        <span class="note-body">
+          <span class="note-title">双向链路 · 注册 / 登录互跳顺畅</span>
+          <span class="note-desc">“去注册 / 去登录”贴近主操作互跳；服务协议收敛为页脚小字，视觉权重递减。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="7">
+        <span class="num">7</span>
+        <span class="note-body">
+          <span class="note-title">触控与无障碍 · 关键热区 ≥ 44px</span>
+          <span class="note-desc">输入框与按钮高度 52–56px；错误同时用颜色 + 文案双通道表达，不单独依赖颜色。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+    </div>
+
+    <div class="try-box">
+      <div class="try-head">
+        <h2>交互试玩 · TRY IT</h2>
+        <span>一键触发，观察右侧手机中的反馈</span>
+      </div>
+      <div class="try-grid">
+        <button class="try-chip" data-act="empty" type="button">空态校验<em>清空后提交</em></button>
+        <button class="try-chip" data-act="example" type="button">填充示例<em>演示数据</em></button>
+        <button class="try-chip" data-act="submit" type="button">注册成功<em>加载闭环</em></button>
+        <button class="try-chip" data-act="eye" type="button">密码可见<em>明文 / 掩码</em></button>
+      </div>
+    </div>
+
+    <div class="palette">
+      <span class="palette-label">TOKENS</span>
+      <span class="tok"><i class="dot" style="background:#0FA968"></i>Primary</span>
+      <span class="tok"><i class="dot" style="background:linear-gradient(135deg,#22C55E,#047857)"></i>CTA</span>
+      <span class="tok"><i class="dot" style="background:#111827"></i>Ink</span>
+      <span class="tok"><i class="dot" style="background:#F5F7FC;border:1px solid #DFE4EE"></i>Surface</span>
+      <span class="tok"><i class="dot" style="background:#E5484D"></i>Error</span>
+    </div>
+  </aside>
+
+  <!-- ============ 右：手机预览 ============ -->
+  <section class="device-zone">
+    <div class="device-toolbar">
+      <div class="live"><i></i>实时交互原型 · 可点击操作</div>
+      <div class="device-tools">
+        <button class="tool-btn" id="spotToggle" type="button">标注 1–7</button>
+        <button class="tool-btn" id="resetBtn" type="button">重置演示</button>
+      </div>
+    </div>
+
+    <div class="device" id="device">
+      <div class="screen" id="screen">
+        <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i>
+
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="sb-icons">
+            <svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="7" width="2.5" height="3" rx="0.7"/><rect x="4" y="5" width="2.5" height="5" rx="0.7"/><rect x="8" y="2.5" width="2.5" height="7.5" rx="0.7"/><rect x="12" y="0" width="2.5" height="10" rx="0.7"/></svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1.2 3.6a8 8 0 0 1 11.6 0M3.3 5.8a5.3 5.3 0 0 1 7.4 0M5.5 8a2.6 2.6 0 0 1 3 0"/></svg>
+            <span class="battery"><b></b></span>
+          </span>
+        </div>
+
+        <!-- 注册主视图 -->
+        <div class="content" id="loginView">
+          <div class="brand" data-zones="1" id="zoneBrand">
+            <span class="spot s-brand" data-jump="1">1</span>
+            <span class="logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.8 14 7l5.2 2-5.2 2-2 5.2-2-5.2L4.8 9 10 7z"/></svg>
+            </span>
+            <span class="word">elo<small>Workplace</small></span>
+          </div>
+
+          <div class="hello" data-zones="1">
+            <h2>创建账号</h2>
+            <p>注册 <b>elo 账号</b>，只需填写账号与密码</p>
+          </div>
+
+          <form class="login-form" id="registerForm" novalidate>
+            <div class="fgroup" id="zoneAccount" data-zones="2">
+              <span class="spot s-account" data-jump="2">2</span>
+              <label class="flabel" for="accountInput">账号<em>*</em></label>
+              <div class="field" id="accountField">
+                <span class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.8"/><path d="M4.8 20c.8-4.1 3.6-6.2 7.2-6.2s6.4 2.1 7.2 6.2"/></svg></span>
+                <input id="accountInput" type="text" autocomplete="username" placeholder="邮箱 / 手机号" spellcheck="false">
+                <button class="clear-btn" type="button" tabindex="-1" aria-label="清空账号">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+                </button>
+              </div>
+              <div class="fmsg" id="accountMsg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V13M12 16.6v.2"/></svg><span></span></div>
+            </div>
+
+            <div class="fgroup" id="zonePassword" data-zones="3 5">
+              <span class="spot s-password" data-jump="3">3</span>
+              <label class="flabel" for="passwordInput">密码<em>*</em></label>
+              <div class="field" id="passwordField">
+                <span class="f-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10.5" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+                <input id="passwordInput" type="password" autocomplete="new-password" placeholder="设置密码（至少 8 位）">
+                <button class="eye-btn" id="eyeBtn" type="button" aria-label="显示密码" tabindex="-1">
+                  <svg class="eye-on-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></svg>
+                  <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.8 4.2 20.2 19.8M9.9 6.2A9.8 9.8 0 0 1 12 5.8c6 0 9.5 6.2 9.5 6.2a17.4 17.4 0 0 1-3.4 4M6.2 8.1A17 17 0 0 0 2.5 12S6 18.2 12 18.2a9.6 9.6 0 0 0 3.3-.6M10 13.2a3 3 0 0 0 4.2-4.2"/></svg>
+                </button>
+              </div>
+              <div class="fmsg" id="passwordMsg" data-zones="5" data-pos><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V13M12 16.6v.2"/></svg><span></span></div>
+            </div>
+
+            <div class="submit-row" data-zones="4" data-pos>
+              <span class="spot s-btn" data-jump="4">4</span>
+              <button class="btn" id="registerBtn" type="submit">
+                <span class="spinner" aria-hidden="true"></span>
+                <span class="btn-copy"><span class="btn-text">注册并登录</span></span>
+                <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+
+            <div class="forgot-row switch-row" data-zones="6" data-pos>
+              <span class="spot s-forgot" data-jump="6">6</span>
+              <span style="font-size:12px;color:#7C879E">已有账号？</span>
+              <button class="link-btn" id="loginLink" type="button">直接登录</button>
+            </div>
+
+            <div class="assist-row" data-zones="6">
+              <button class="agreement" id="termsBtn" type="button">注册即代表同意《服务协议》与《隐私政策》</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 注册成功视图 -->
+        <div class="success-view">
+          <div class="success-card">
+            <div class="check-circle">
+              <span class="check-ring"></span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 10 18 19.5 7"/></svg>
+            </div>
+            <h3>注册成功</h3>
+            <p class="who">欢迎加入 <b>elo</b>，账号 <b id="welcomeName">design@elo.cn</b> 已创建。</p>
+            <span class="success-note">该视图用于演示「校验 → 注册 → 成功」完整状态机</span>
+            <button class="btn ghost-btn" id="goLoginBtn" type="button">前往登录</button>
+          </div>
+        </div>
+
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+          <span id="toastText">注册成功</span>
+        </div>
+        <div class="home-indicator"></div>
+      </div>
+      <span class="spot s-touch" data-jump="7">7</span>
+    </div>
+    <div style="font-size:10px;color:#8B94A9;letter-spacing:.6px;font-weight:600">预览尺寸 390 × 844 · 整体已适配当前窗口，可直接整屏截图</div>
+  </section>
+</div>
+
+<script>
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
+  const workspace = $('#workspace');
+
+  /* ---------- 整页等比缩放，保证 一屏 + 截图完整 ---------- */
+  function fit(){
+    const pad = 26;
+    const sx = (window.innerWidth - pad * 2) / workspace.offsetWidth;
+    const sy = (window.innerHeight - pad * 2) / workspace.offsetHeight;
+    let s = Math.min(sx, sy);
+    s = Math.max(.62, Math.min(s, 1.25));
+    workspace.style.transform = `scale(${s})`;
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  /* ---------- 状态与字段 ---------- */
+  const screen       = $('#screen');
+  const device       = $('#device');
+  const form         = $('#registerForm');
+  const accountInput = $('#accountInput');
+  const pwdInput     = $('#passwordInput');
+  const accountGroup = $('#zoneAccount');
+  const pwdGroup     = $('#zonePassword');
+  const accountMsg   = $('#accountMsg').querySelector('span');
+  const pwdMsg       = $('#passwordMsg').querySelector('span');
+  const registerBtn  = $('#registerBtn');
+  const toast        = $('#toast');
+  const toastText    = $('#toastText');
+  const DEMO = { account:'design@elo.cn', password:'elo@2026' };
+  let toastTimer, noteTimer = null;
+
+  function showMsg(group, msg, shake){
+    group.classList.add('has-error');
+    (group.id==='zoneAccount' ? accountMsg : pwdMsg).textContent = msg;
+    if(shake){
+      group.classList.remove('shake');
+      void group.offsetWidth;
+      group.classList.add('shake');
+    }
+  }
+  function clearMsg(group){
+    group.classList.remove('has-error','shake');
+    (group.id==='zoneAccount' ? accountMsg : pwdMsg).textContent = '';
+  }
+  function showToast(text){
+    clearTimeout(toastTimer);
+    toastText.textContent = text;
+    toast.classList.add('show');
+    toastTimer = setTimeout(()=>toast.classList.remove('show'), 2100);
+  }
+  function validate(){
+    let ok = true;
+    const acc = accountInput.value.trim();
+    if(!acc){ showMsg(accountGroup, '请输入账号', true); ok = false; }
+    else if(acc.length < 3){ showMsg(accountGroup, '账号长度不能少于 3 位', true); ok = false; }
+    else if(acc.includes('@') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(acc)){ showMsg(accountGroup, '邮箱格式不正确，请检查', true); ok = false; }
+    else clearMsg(accountGroup);
+
+    const pwd = pwdInput.value;
+    if(!pwd){ showMsg(pwdGroup, '请输入密码', true); ok = false; }
+    else if(pwd.length < 8){ showMsg(pwdGroup, '密码长度至少为 8 位', true); ok = false; }
+    else clearMsg(pwdGroup);
+    return ok;
+  }
+
+  /* 输入态：清空错误、显示清除按钮、同步成功页昵称 */
+  [accountInput, pwdInput].forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      clearMsg(inp === accountInput ? accountGroup : pwdGroup);
+      const field = inp === accountInput ? $('#accountField') : $('#passwordField');
+      const clear = field.querySelector('.clear-btn');
+      if(clear){ clear.classList.toggle('show', inp.value.length > 0); }
+    });
+    inp.addEventListener('focus', ()=>{});
+  });
+  $$('.clear-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.preventDefault();
+      const field = btn.closest('.field');
+      const input = field.querySelector('input');
+      input.value='';
+      btn.classList.remove('show');
+      clearMsg(btn.closest('.fgroup'));
+      input.focus();
+    });
+  });
+
+  /* 密码可见性 */
+  const eyeBtn = $('#eyeBtn');
+  eyeBtn.addEventListener('click', e=>{
+    e.preventDefault();
+    const visible = pwdInput.type === 'password';
+    pwdInput.type = visible ? 'text' : 'password';
+    $('#passwordField').classList.toggle('pwd-visible', visible);
+    eyeBtn.setAttribute('aria-label', visible ? '隐藏密码' : '显示密码');
+    pwdInput.focus();
+  });
+
+  /* 波纹 */
+  function ripple(e){
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const d = Math.max(rect.width, rect.height);
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    r.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX-rect.left-d/2}px;top:${e.clientY-rect.top-d/2}px`;
+    btn.appendChild(r);
+    setTimeout(()=>r.remove(), 650);
+  }
+
+  /* 注册流程 */
+  function welcomeName(){
+    const acc = accountInput.value.trim();
+    const name = acc.includes('@') ? acc.split('@')[0].split(/[._-]/)[0] : acc;
+    $('#welcomeName').textContent = acc || 'design@elo.cn';
+  }
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    if(registerBtn.classList.contains('loading') || screen.classList.contains('logged')) return;
+    if(!validate()) return;
+    registerBtn.classList.add('loading');
+    setTimeout(()=>{
+      registerBtn.classList.remove('loading');
+      screen.classList.add('logged');
+      welcomeName();
+    }, 1050);
+  });
+  registerBtn.addEventListener('pointerdown', ripple);
+
+  function resetDemo(){
+    clearTimeout(noteTimer);
+    screen.classList.remove('logged');
+    registerBtn.classList.remove('loading');
+    accountInput.value = '';
+    pwdInput.value = '';
+    pwdInput.type = 'password';
+    $('#passwordField').classList.remove('pwd-visible');
+    clearMsg(accountGroup); clearMsg(pwdGroup);
+    $$('.clear-btn').forEach(b=>b.classList.remove('show'));
+    clearHighlight();
+    $('#noteList').querySelectorAll('.note').forEach(n=>n.classList.remove('is-active'));
+  }
+  $('#goLoginBtn').addEventListener('click', ()=>{ location.href = 'login-prototype.html'; });
+  $('#loginLink').addEventListener('click', e=>{ e.preventDefault(); location.href = 'login-prototype.html'; });
+  $('#resetBtn').addEventListener('click', ()=>{
+    resetDemo();
+    showToast('演示状态已重置');
+  });
+
+  /* 辅助链路演示 */
+  $('#termsBtn').addEventListener('click', e=>{ e.preventDefault(); showToast('原型示意：打开《服务协议》与《隐私政策》'); });
+
+  /* 左侧“交互试玩”快捷入口 */
+  $$('.try-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const act = chip.dataset.act;
+      if(screen.classList.contains('logged')) resetDemo();
+      if(act === 'empty'){
+        accountInput.value='';
+        pwdInput.value='';
+        $$('.clear-btn').forEach(b=>b.classList.remove('show'));
+        validate();
+        accountInput.focus();
+      } else if(act === 'example'){
+        clearMsg(accountGroup); clearMsg(pwdGroup);
+        accountInput.value = DEMO.account;
+        pwdInput.value = DEMO.password;
+        $$('.clear-btn').forEach(b=>b.classList.add('show'));
+        showToast('已填充示例账号，可直接注册');
+      } else if(act === 'submit'){
+        if(!accountInput.value) accountInput.value = DEMO.account;
+        if(!pwdInput.value) pwdInput.value = DEMO.password;
+        $$('.clear-btn').forEach(b=>b.classList.add('show'));
+        form.requestSubmit();
+      } else if(act === 'eye'){
+        eyeBtn.click();
+      }
+    });
+  });
+
+  /* ---------- 标注高亮：点击左侧条目或右侧数字 ---------- */
+  function clearHighlight(){
+    $$('[data-zones]').forEach(el=>el.classList.remove('hl'));
+    device.classList.remove('hl-frame');
+  }
+  function highlightNote(i){
+    clearHighlight();
+    if(i === 7){ device.classList.add('hl-frame'); return; }
+    $$('[data-zones]').forEach(el=>{
+      const zones = (el.dataset.zones||'').split(' ').map(Number);
+      if(zones.includes(i)) el.classList.add('hl');
+    });
+    if(i === 5) demoErrorFeedback();
+  }
+  function setActiveNote(i){
+    const notes = $$('.note');
+    notes.forEach(n=>n.classList.toggle('is-active', Number(n.dataset.note) === i));
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(()=>notes.forEach(n=>n.classList.remove('is-active')), 2600);
+  }
+  $$('.note').forEach(note=>{
+    note.addEventListener('click', ()=>{
+      const i = Number(note.dataset.note);
+      if(screen.classList.contains('logged')) resetDemo();
+      setActiveNote(i);
+      highlightNote(i);
+    });
+  });
+  $$('.spot').forEach(spot=>{
+    spot.addEventListener('click', e=>{
+      e.stopPropagation();
+      const i = Number(spot.dataset.jump);
+      if(screen.classList.contains('logged')) resetDemo();
+      setActiveNote(i);
+      highlightNote(i);
+      const target = document.querySelector(`[data-note="${i}"] .note-title`);
+      if(target) target.animate(
+        [{color:'#111827'},{color:'#0FA968',offset:.4},{color:'#111827'}],
+        {duration:1300, easing:'ease'}
+      );
+    });
+  });
+
+  /* 第 5 条：演示就近校验反馈（不破坏已有输入） */
+  function demoErrorFeedback(){
+    if(screen.classList.contains('logged')) return;
+    showMsg(pwdGroup, '密码至少 8 位，请调整（演示）', true);
+    setTimeout(()=>{
+      if(!screen.classList.contains('logged')) clearMsg(pwdGroup);
+    }, 2400);
+  }
+
+  /* 标注数字开关 */
+  $('#spotToggle').addEventListener('click', function(){
+    device.classList.toggle('show-spots');
+    this.classList.toggle('on', device.classList.contains('show-spots'));
+    if(device.classList.contains('show-spots')){
+      this.textContent = '标注已显示';
+      clearHighlight();
+    } else {
+      this.textContent = '标注 1–7';
+    }
+  });
+
+  /* 页面加载时按内容显示清除按钮 */
+  $$('.clear-btn').forEach(b=>b.classList.toggle('show', b.closest('.field').querySelector('input').value.length > 0));
+  window.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' && e.target.tagName !== 'BUTTON' && !e.target.closest('form')){
+      form.requestSubmit();
+    }
+  });
+</script>
+</body>
+</html>

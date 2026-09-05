@@ -1,0 +1,46 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/register/register",
+      "style": {
+        "navigationBarTitleText": "注册"
+      }
+    },
+    {
+      "path": "pages/checkin/checkin",
+      "style": {
+        "navigationBarTitleText": "打卡"
+      }
+    },
+    {
+      "path": "pages/set-goal/set-goal",
+      "style": {
+        "navigationBarTitleText": "设置打卡目标"
+      }
+    },
+    {
+      "path": "pages/edit-goal/edit-goal",
+      "style": {
+        "navigationBarTitleText": "修改打卡目标"
+      }
+    },
+    {
+      "path": "pages/statistics/statistics",
+      "style": {
+        "navigationBarTitleText": "统计"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "elo",
+    "navigationBarBackgroundColor": "#F3F8F5",
+    "backgroundColor": "#F3F8F5"
+  }
+}

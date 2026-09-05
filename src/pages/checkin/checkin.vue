@@ -1,0 +1,486 @@
+<template>
+  <view class="page">
+    <view class="wrap">
+      <view class="home-head">
+        <view class="head-copy">
+          <text class="kicker">{{ dateLabel }}</text>
+          <text class="title">早上好，陈晨</text>
+          <text class="sub">今天也给自己打个卡吧</text>
+        </view>
+        <view class="head-actions">
+          <view class="nav-btn" @click="goStats">
+            <view class="bar b1"></view>
+            <view class="bar b2"></view>
+            <view class="bar b3"></view>
+          </view>
+          <view class="avatar">晨</view>
+        </view>
+      </view>
+
+      <view class="today-head">
+        <view class="th-left">
+          <text class="th-title">今日打卡</text>
+          <view class="streak">
+            <text class="fire">✦</text>
+            <text>已坚持 12 天</text>
+          </view>
+        </view>
+        <view class="done-chip" :class="{ all: doneNum === visibleGoals.length && visibleGoals.length > 0 }">
+          {{ doneNum }} / {{ visibleGoals.length }} 完成
+        </view>
+      </view>
+
+      <view class="goal-list" v-if="visibleGoals.length">
+        <view class="goal-row" v-for="(g, i) in visibleGoals" :key="g.id || i">
+          <view class="g-check" :class="{ done: isDone(g.id) }" @click="toggle(g.id)">
+            <text>✓</text>
+          </view>
+          <view class="goal-info">
+            <text class="g-name">{{ g.name }}</text>
+            <text class="g-task">{{ g.task || '（未填写具体任务）' }}</text>
+            <text class="g-meta">{{ goalMeta(g) }}</text>
+          </view>
+          <view class="g-edit" @click="editGoal(g)">修改</view>
+        </view>
+      </view>
+
+      <view v-else-if="goals.length" class="empty">
+        <text class="empty-title">今天没有需要打卡的目标</text>
+        <text class="empty-sub">好好休息，按自己的节奏来</text>
+      </view>
+
+      <view v-else class="empty">
+        <text class="empty-title">还没有打卡目标</text>
+        <text class="empty-sub">先设置一个想坚持的目标吧</text>
+      </view>
+
+      <view class="manage-card">
+        <view class="manage-copy">
+          <text class="m-title">目标管理</text>
+          <text class="m-sub">日日行，不怕千万里；常常做，不怕千万事。</text>
+        </view>
+        <view class="manage-btn" @click="goNew">＋ 新目标</view>
+      </view>
+
+      <text class="foot-hint">记录只属于你自己，慢慢来也没关系</text>
+    </view>
+  </view>
+</template>
+
+<script>
+const DEFAULT_GOALS = [
+  {
+    id: 'goal_learning',
+    name: '学习',
+    task: '背 20 个单词',
+    freq: { daily: true, days: 1 },
+    time: '21:30'
+  }
+]
+export default {
+  data() {
+    return {
+      dateLabel: '',
+      goals: [],
+      doneIds: [],
+      log: []
+    }
+  },
+  computed: {
+    doneNum() {
+      return this.doneIds.filter(id => this.visibleGoals.some(g => g.id === id)).length
+    },
+    visibleGoals() {
+      const code = ((new Date().getDay() + 6) % 7) + 1
+      return this.goals.filter(g => {
+        const f = g.freq || { mode: 'daily' }
+        return !(f.mode === 'days' && !f.days.includes(code))
+      })
+    }
+  },
+  onLoad() {
+    this.setDate()
+  },
+  onShow() {
+    this.loadGoals()
+    this.loadDone()
+    this.loadLog()
+  },
+  methods: {
+    setDate() {
+      const d = new Date()
+      const week = ['日', '一', '二', '三', '四', '五', '六']
+      this.dateLabel = `${d.getMonth() + 1}月${d.getDate()}日 · 星期${week[d.getDay()]}`
+    },
+    todayKey() {
+      const d = new Date()
+      return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+    },
+    dateStr(d) {
+      const p = n => String(n).padStart(2, '0')
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+    },
+    inThisWeek(s) {
+      const [y, m, d] = s.split('-').map(Number)
+      const date = new Date(y, m - 1, d)
+      const now = new Date()
+      const offset = (now.getDay() + 6) % 7
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset)
+      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6)
+      return date >= start && date <= end
+    },
+    loadLog() {
+      try {
+        const saved = uni.getStorageSync('eloCheckinLog')
+        this.log = Array.isArray(saved) ? saved : []
+      } catch (e) {
+        this.log = []
+      }
+    },
+    saveLog() {
+      uni.setStorageSync('eloCheckinLog', this.log)
+    },
+    loadGoals() {
+      const stored = uni.getStorageSync('eloCheckinGoals')
+      const list = Array.isArray(stored) && stored.length ? stored : DEFAULT_GOALS.map(g => JSON.parse(JSON.stringify(g)))
+      const normFreq = f => {
+        if (!f) return { mode: 'daily' }
+        if (f.mode) {
+          if (f.mode === 'count') return { mode: 'count', count: Number(f.count) || 3 }
+          if (f.mode === 'days') {
+            const days = Array.isArray(f.days) ? [...new Set(f.days)].filter(n => n >= 1 && n <= 7) : []
+            return { mode: 'days', days: days.sort((a, b) => a - b) }
+          }
+          return { mode: 'daily' }
+        }
+        if (f.daily === false) return { mode: 'count', count: Number(f.days) || 3 }
+        return { mode: 'daily' }
+      }
+      this.goals = list.map((g, i) => ({
+        id: g.id || `goal_${i}_${Date.now()}`,
+        name: g.name || '未命名目标',
+        task: g.task || '',
+        freq: normFreq(g.freq),
+        time: g.time || '21:30'
+      }))
+      uni.setStorageSync('eloCheckinGoals', this.goals)
+    },
+    loadDone() {
+      try {
+        const saved = uni.getStorageSync('eloCheckinDone')
+        if (saved && saved.date === this.todayKey() && Array.isArray(saved.ids)) {
+          this.doneIds = saved.ids.filter(id => this.goals.some(g => g.id === id))
+        } else {
+          this.doneIds = []
+        }
+      } catch (e) {
+        this.doneIds = []
+      }
+    },
+    saveDone() {
+      uni.setStorageSync('eloCheckinDone', { date: this.todayKey(), ids: this.doneIds })
+    },
+    isDone(id) {
+      return this.doneIds.indexOf(id) > -1
+    },
+    goalMeta(g) {
+      const f = g.freq || { mode: 'daily' }
+      if (f.mode === 'count') {
+        const done = this.log.filter(e => e.id === g.id && this.inThisWeek(e.date)).length
+        return `每周 ${f.count} 次 · 本周已完成 ${done}/${f.count} · ${g.time} 提醒`
+      }
+      if (f.mode === 'days') {
+        const names = ['一', '二', '三', '四', '五', '六', '日']
+        const text = f.days.map(n => names[n - 1]).join('、')
+        return `每周${text} · ${g.time} 提醒`
+      }
+      return `每天 1 次 · ${g.time} 提醒`
+    },
+    toggle(id) {
+      if (this.isDone(id)) {
+        this.doneIds = this.doneIds.filter(x => x !== id)
+        this.log = this.log.filter(e => !(e.id === id && e.date === this.dateStr(new Date())))
+      } else {
+        this.doneIds.push(id)
+        this.log.push({ id, date: this.dateStr(new Date()) })
+        if (this.doneIds.length === this.visibleGoals.length) {
+          uni.showToast({ title: '今日目标全部完成', icon: 'success' })
+        }
+      }
+      this.saveDone()
+      this.saveLog()
+    },
+    goStats() {
+      uni.navigateTo({ url: '/pages/statistics/statistics' })
+    },
+    goNew() {
+      uni.navigateTo({ url: '/pages/set-goal/set-goal' })
+    },
+    editGoal(g) {
+      uni.navigateTo({ url: `/pages/edit-goal/edit-goal?id=${encodeURIComponent(g.id)}` })
+    }
+  }
+}
+</script>
+
+<style scoped>
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(420rpx 320rpx at 92% -2%, rgba(16, 185, 129, 0.10), rgba(16, 185, 129, 0) 70%),
+    linear-gradient(180deg, #F9FCFA 0%, #F3F8F5 100%);
+}
+.wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 34rpx 42rpx 30rpx;
+}
+.home-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+.kicker {
+  display: block;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #0E9F6E;
+}
+.title {
+  display: block;
+  font-size: 50rpx;
+  font-weight: 800;
+  color: #101828;
+  margin-top: 8rpx;
+}
+.sub {
+  display: block;
+  font-size: 24rpx;
+  color: #74819A;
+  margin-top: 6rpx;
+}
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+}
+.nav-btn {
+  width: 82rpx;
+  height: 82rpx;
+  border-radius: 28rpx;
+  background: #fff;
+  border: 2rpx solid #E2E7F0;
+  box-shadow: 0 10rpx 22rpx -14rpx rgba(30, 55, 80, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6rpx;
+  padding-bottom: 22rpx;
+}
+.bar {
+  width: 8rpx;
+  border-radius: 4rpx;
+  background: #0B9D60;
+}
+.b1 {
+  height: 16rpx;
+}
+.b2 {
+  height: 26rpx;
+}
+.b3 {
+  height: 36rpx;
+}
+.avatar {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 34rpx;
+  background: linear-gradient(145deg, #22C55E, #047857);
+  color: #fff;
+  font-size: 38rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 18rpx 34rpx -16rpx rgba(16, 150, 90, 0.7);
+}
+.today-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 46rpx;
+}
+.th-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+.th-title {
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #243042;
+}
+.streak {
+  display: flex;
+  align-items: center;
+  font-size: 19rpx;
+  font-weight: 700;
+  color: #0B7A4E;
+  background: #E8F9F0;
+  border: 2rpx solid #BCEBCE;
+  border-radius: 999rpx;
+  padding: 6rpx 16rpx;
+}
+.fire {
+  color: #F59E0B;
+  margin-right: 6rpx;
+}
+.done-chip {
+  font-size: 20rpx;
+  font-weight: 800;
+  color: #0B7A4E;
+  background: #E8F9F0;
+  border-radius: 999rpx;
+  padding: 8rpx 18rpx;
+}
+.done-chip.all {
+  background: linear-gradient(135deg, #22C55E, #0BA360);
+  color: #fff;
+}
+.goal-list {
+  margin-top: 24rpx;
+}
+.goal-row {
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+  background: #fff;
+  border: 2rpx solid #E2EFE7;
+  border-radius: 34rpx;
+  padding: 22rpx 24rpx;
+  box-shadow: 0 18rpx 36rpx -30rpx rgba(20, 65, 46, 0.7);
+  margin-bottom: 18rpx;
+}
+.g-check {
+  width: 64rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 3rpx solid #C9D6E8;
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+.g-check.done {
+  background: linear-gradient(135deg, #22C55E, #0BA360);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 10rpx 20rpx -8rpx rgba(13, 148, 90, 0.6);
+}
+.goal-info {
+  flex: 1;
+  min-width: 0;
+}
+.g-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #243042;
+}
+.g-task {
+  display: block;
+  font-size: 22rpx;
+  color: #7E8CA3;
+  margin-top: 2rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-meta {
+  display: block;
+  font-size: 18rpx;
+  color: #A0AABE;
+  margin-top: 4rpx;
+}
+.g-edit {
+  flex-shrink: 0;
+  font-size: 21rpx;
+  font-weight: 700;
+  color: #0B7A4E;
+  background: #E8F9F0;
+  border-radius: 20rpx;
+  padding: 12rpx 18rpx;
+}
+.empty {
+  margin-top: 40rpx;
+  padding: 70rpx 20rpx;
+  background: #fff;
+  border-radius: 34rpx;
+  text-align: center;
+}
+.empty-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #243042;
+}
+.empty-sub {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #9AA6BA;
+}
+.manage-card {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: #fff;
+  border: 2rpx solid #E2EFE7;
+  border-radius: 36rpx;
+  padding: 24rpx;
+  box-shadow: 0 18rpx 36rpx -32rpx rgba(20, 65, 46, 0.8);
+  margin-top: 6rpx;
+}
+.manage-copy {
+  flex: 1;
+  min-width: 0;
+}
+.m-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #243042;
+}
+.m-sub {
+  display: block;
+  font-size: 19rpx;
+  color: #A0AABE;
+  margin-top: 4rpx;
+}
+.manage-btn {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #22C55E, #0BA360);
+  border-radius: 24rpx;
+  padding: 18rpx 26rpx;
+  box-shadow: 0 14rpx 24rpx -12rpx rgba(13, 148, 90, 0.8);
+}
+.foot-hint {
+  display: block;
+  text-align: center;
+  margin-top: auto;
+  padding-top: 22rpx;
+  font-size: 20rpx;
+  color: #9AA6BA;
+  letter-spacing: 1rpx;
+}
+</style>

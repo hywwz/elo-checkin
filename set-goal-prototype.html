@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设置打卡目标 · 高保真交互原型</title>
+<style>
+  :root{
+    --primary:#0FA968;
+    --primary-deep:#047857;
+    --grad-2:#37D67F;
+    --ink:#111827;
+    --sub:#5F6B84;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:var(--font);color:var(--ink);
+    background:
+      radial-gradient(1000px 560px at 12% -10%, #DDF9EA 0%, rgba(221,249,234,0) 60%),
+      radial-gradient(900px 620px at 112% 118%, #D7F7EC 0%, rgba(215,247,236,0) 55%),
+      #EAF3EC;
+    display:grid;place-items:center;overflow:hidden;
+  }
+  .workspace{width:1340px;height:800px;display:grid;grid-template-columns:616px 1fr;gap:34px;transform-origin:center center}
+
+  /* 左侧设计说明 */
+  .panel{
+    background:rgba(255,255,255,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.95);border-radius:28px;padding:26px 26px 20px;
+    box-shadow:0 30px 70px -34px rgba(24,94,62,.36);
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:2.6px;color:var(--primary)}
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:3px;background:linear-gradient(135deg,var(--primary),var(--grad-2));box-shadow:0 0 0 4px rgba(16,185,129,.16)}
+  .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-top:10px}
+  h1{font-size:25px;font-weight:800;line-height:1.25}
+  .head-row p{font-size:12.5px;color:var(--sub);line-height:1.6;margin-top:5px}
+  .head-meta{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;width:150px}
+  .head-meta span{font-size:10.5px;color:#4D5870;background:#EEF1F9;border:1px solid #E2E7F2;padding:4px 8px;border-radius:99px;font-weight:600;white-space:nowrap}
+  .notes-head{display:flex;align-items:baseline;justify-content:space-between;margin:17px 2px 6px}
+  .notes-head h2{font-size:13px;font-weight:800;letter-spacing:1.2px;color:#273149}
+  .notes-head span{font-size:10.5px;color:#8A96AC}
+  .note-list{display:flex;flex-direction:column;justify-content:space-evenly;flex:1 1 auto;min-height:0}
+  .note{
+    display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+    background:transparent;border:1px solid transparent;border-radius:14px;padding:9px 10px;
+    cursor:pointer;font-family:inherit;
+    transition:background .18s ease,border-color .18s ease;
+  }
+  .note:hover{background:#F1FBF6;border-color:#C9F2DF}
+  .note.is-active{background:linear-gradient(90deg,#E9FAF1,#F0FBF6);border-color:#A7E8C4;box-shadow:0 8px 18px -12px rgba(16,185,129,.45)}
+  .num{
+    flex:0 0 24px;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;
+    font-size:11px;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,var(--primary),var(--grad-2));
+    box-shadow:0 4px 10px -3px rgba(13,148,90,.55);
+  }
+  .note-body{flex:1;min-width:0}
+  .note-title{display:block;font-size:13.5px;font-weight:700;color:#1B2438;line-height:1.35}
+  .note-desc{display:block;font-size:11.2px;color:#6A7590;line-height:1.5;margin-top:2px}
+  .note-go{color:#A9B2C8;font-size:13px}
+  .note:hover .note-go{color:var(--primary)}
+  .try-box{
+    flex:0 0 auto;margin:4px 0 0;background:#F4FBF7;border:1px dashed #BBE9D1;
+    border-radius:16px;padding:11px 12px 12px;
+  }
+  .try-head{display:flex;align-items:baseline;justify-content:space-between}
+  .try-head h2{font-size:11px;font-weight:800;letter-spacing:1.2px;color:#33405F}
+  .try-head span{font-size:10px;color:#96A1B8}
+  .try-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:9px}
+  .try-chip{
+    appearance:none;cursor:pointer;font-family:inherit;text-align:center;
+    font-size:11.5px;font-weight:700;color:#316E51;letter-spacing:.2px;
+    background:#fff;border:1px solid #DCEFE5;border-radius:12px;padding:8px 4px;
+    box-shadow:0 2px 6px -3px rgba(24,94,62,.18);
+    transition:transform .14s ease,border-color .15s ease,color .15s ease;
+  }
+  .try-chip:hover{color:#0B9D60;border-color:#86EFAC;transform:translateY(-1px)}
+  .try-chip:active{transform:scale(.96)}
+  .palette{margin-top:auto;padding-top:10px;display:flex;align-items:center;gap:12px}
+  .palette-label{font-size:10px;font-weight:700;color:#9AA5BA;letter-spacing:1.5px;white-space:nowrap}
+  .palette .tok{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:#65708A;background:#F5F7FC;border:1px solid #EAEEF6;border-radius:8px;padding:4px 7px;white-space:nowrap}
+  .palette .dot{width:10px;height:10px;border-radius:3.5px}
+
+  /* 右侧手机 */
+  .device-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;min-width:0}
+  .device-toolbar{display:flex;align-items:center;justify-content:space-between;width:378px;color:#5B6478}
+  .live{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:#46506A;letter-spacing:.8px}
+  .live i{width:7px;height:7px;border-radius:50%;background:#25C26E;box-shadow:0 0 0 4px rgba(37,194,110,.16);animation:livePulse 1.8s infinite}
+  @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .device-tools{display:flex;gap:7px}
+  .tool-btn{appearance:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:#4B5670;background:rgba(255,255,255,.85);border:1px solid rgba(151,163,189,.38);border-radius:99px;padding:6px 12px;box-shadow:0 3px 10px -5px rgba(50,66,110,.25);transition:all .18s ease}
+  .tool-btn:hover{border-color:#B8C3E4;transform:translateY(-1px)}
+  .tool-btn.on{background:#14532D;color:#fff;border-color:#14532D}
+  .device{
+    position:relative;width:378px;height:752px;background:#12141A;border:1px solid #000;border-radius:58px;padding:9px;
+    box-shadow:0 0 0 2px #2A2E38,0 42px 90px -28px rgba(24,34,64,.72),0 14px 38px -18px rgba(24,34,64,.5),inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+  .device.hl-frame{outline:2.5px dashed var(--primary);outline-offset:8px;animation:zonePulse 1.2s ease 2}
+  .screen{
+    position:relative;width:100%;height:100%;
+    background:
+      radial-gradient(640px 320px at 92% -5%, rgba(16,185,129,.13), rgba(16,185,129,0) 58%),
+      radial-gradient(560px 300px at -8% 2%, rgba(74,222,128,.10), rgba(74,222,128,0) 55%),
+      linear-gradient(180deg,#F9FCFA 0%,#F3F8F5 100%);
+    border-radius:50px;overflow:hidden;display:flex;flex-direction:column;
+  }
+  .statusbar{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;height:34px;padding:0 26px;color:#141A28;font-size:12px;font-weight:700}
+  .sb-icons{display:flex;align-items:center;gap:5px}
+  .battery{position:relative;width:19px;height:9px;border:1px solid #394155;border-radius:2.5px;padding:1.5px;margin-left:2px}
+  .battery::after{content:"";position:absolute;right:-3px;top:2.5px;width:1.5px;height:4px;background:#394155;border-radius:0 2px 2px 0}
+  .battery b{display:block;width:72%;height:100%;background:#141A28;border-radius:1px}
+  .content{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;padding:4px 25px 12px;min-height:0}
+  .blob{position:absolute;border-radius:50%;filter:blur(10px);pointer-events:none}
+  .blob.b1{width:120px;height:120px;background:rgba(16,185,129,.12);top:-32px;right:-24px}
+
+  .page-head{
+    position:relative;display:flex;align-items:center;gap:12px;
+    min-height:48px;margin-bottom:8px;
+  }
+  .back-btn{
+    width:34px;height:34px;border-radius:50%;border:1px solid #E2E7F0;
+    background:#fff;color:#4B5670;cursor:pointer;display:grid;place-items:center;
+    box-shadow:0 5px 12px -7px rgba(30,55,80,.4);transition:all .15s ease;
+  }
+  .back-btn:hover{transform:translateX(-2px)}
+  .back-btn svg{width:16px;height:16px}
+  .page-head h2{font-size:17px;font-weight:800;letter-spacing:.5px}
+  .page-head .sub-label{margin-left:auto;font-size:10px;color:#A3ADC2;font-weight:600}
+
+  .sec-title{
+    display:flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:800;letter-spacing:1px;color:#8A95AA;
+    margin:11px 0 8px 2px;
+  }
+  .sec-title i{width:4px;height:4px;border-radius:50%;background:#0FA968}
+
+  .field-tip{font-size:9.5px;color:#A2ADC0;line-height:1.5;margin:5px 3px 0}
+
+  .goal-field{position:relative;margin-top:2px}
+  .flabel{display:block;font-size:11px;font-weight:800;color:#8A95AA;letter-spacing:1px;margin:10px 0 7px 2px}
+  .input-wrap{
+    display:flex;align-items:center;gap:9px;
+    background:#fff;border:1.5px solid #E3EDE7;border-radius:15px;
+    padding:0 13px;height:50px;
+    transition:border-color .2s ease,box-shadow .2s ease;
+  }
+  .input-wrap:focus-within{border-color:#22C55E;box-shadow:0 0 0 4px rgba(16,185,129,.12)}
+  .input-wrap svg{width:17px;height:17px;color:#9AA6BA}
+  .input-wrap input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;font-family:inherit;font-size:14px;color:#172033}
+  .input-wrap input::placeholder{color:#ABB4C8}
+  .fmsg{display:none;align-items:center;gap:4px;margin:6px 2px 0;font-size:10.5px;font-weight:600;color:var(--err)}
+  .fmsg.show{display:flex}
+  .fmsg svg{width:10px;height:10px}
+
+  .freq-row{position:relative}
+  .segmented{
+    position:relative;display:flex;background:#EAF0EA;border-radius:15px;padding:3px;
+  }
+  .seg-btn{
+    flex:1;appearance:none;cursor:pointer;font-family:inherit;
+    font-size:12.5px;font-weight:700;color:#75806F;
+    border:0;border-radius:12px;padding:10px 0;background:transparent;
+    transition:all .18s ease;
+  }
+  .seg-btn.sel{background:#fff;color:#0B9D60;box-shadow:0 4px 12px -6px rgba(30,70,45,.45)}
+  .freq-desc{display:flex;align-items:center;justify-content:space-between;margin-top:9px;font-size:11px;color:#8A95AA}
+  .freq-desc b{color:#1B2438;font-size:12px}
+  .stepper{display:none;align-items:center;gap:10px}
+  .freq-row.weekly .stepper{display:flex}
+  .step-btn{
+    width:27px;height:27px;border-radius:9px;border:1px solid #C9D6E8;background:#fff;color:#4B5670;
+    font-size:15px;font-weight:800;cursor:pointer;display:grid;place-items:center;line-height:1;
+    transition:all .14s ease;
+  }
+  .step-btn:hover{border-color:#22C55E;color:#0B9D60}
+  .step-btn:active{transform:scale(.92)}
+  .step-btn.minus{font-size:17px}
+
+  .time-picker{
+    position:relative;display:flex;align-items:center;justify-content:center;gap:18px;
+    background:#fff;border:1.5px solid #DCEFE5;border-radius:21px;padding:10px 8px;
+    box-shadow:0 12px 26px -20px rgba(20,65,46,.55);
+  }
+  .tp-col{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:56px}
+  .tp-arrow{
+    width:32px;height:26px;border-radius:10px;border:0;cursor:pointer;
+    background:#E8F9F0;color:#0B9D60;display:grid;place-items:center;
+    transition:all .14s ease;
+  }
+  .tp-arrow:hover{background:#D4F3E2;transform:scale(1.06)}
+  .tp-arrow:active{transform:scale(.94)}
+  .tp-arrow svg{width:14px;height:14px}
+  .tp-value{
+    font-size:27px;font-weight:800;letter-spacing:1px;color:#1B2438;
+    min-width:50px;text-align:center;line-height:1.25;font-variant-numeric:tabular-nums;
+  }
+  .tp-unit{font-size:8px;font-weight:800;letter-spacing:2px;color:#A6B0C4}
+  .tp-colon{font-size:24px;font-weight:800;color:#C2CDDC;margin-top:-10px}
+  .time-remind{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:9.5px;font-weight:800;color:#0B7A4E;background:#E8F9F0;
+    border-radius:99px;padding:4px 9px;letter-spacing:.3px;margin-top:9px;
+  }
+  .time-remind svg{width:10px;height:10px}
+
+  .summary-card{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:#F0FBF5;border:1px solid #C7EDD6;border-radius:17px;
+    padding:11px 14px;margin-top:11px;
+  }
+  .summary-card b{display:block;font-size:12.5px;font-weight:800;color:#1B2438}
+  .summary-card small{display:block;font-size:10px;color:#7E9B8A;margin-top:2px}
+  .summary-tag{font-size:9.5px;font-weight:800;color:#0B7A4E;background:#DDF6E9;border-radius:99px;padding:5px 9px;white-space:nowrap}
+
+  .save-zone{position:relative;margin-top:auto;padding-top:12px}
+  .save-btn{
+    position:relative;overflow:hidden;
+    width:100%;height:52px;border:0;border-radius:17px;
+    background:linear-gradient(135deg,#22C55E 0%,#10B981 55%,#047857 100%);
+    color:#fff;font-family:inherit;font-size:15px;font-weight:800;letter-spacing:1px;cursor:pointer;
+    box-shadow:0 14px 26px -10px rgba(13,148,90,.55), inset 0 1px 0 rgba(255,255,255,.28);
+    transition:transform .14s ease,filter .2s ease;
+  }
+  .save-btn:hover{filter:brightness(1.05)}
+  .save-btn:active{transform:scale(.98)}
+  .save-btn.loading{pointer-events:none}
+  .save-btn .spinner{display:none;width:17px;height:17px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite}
+  .save-btn.loading .spinner{display:inline-block;vertical-align:-3px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .save-btn .txt-default{display:inline}
+  .save-btn.loading .txt-default{display:none}
+
+  .success-view{
+    position:absolute;inset:0;z-index:20;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#FBFCFE 0%,#F2F5FB 100%);
+    opacity:0;visibility:hidden;transition:opacity .35s ease,visibility .35s ease;
+  }
+  .screen.logged .success-view{opacity:1;visibility:visible}
+  .success-card{display:flex;flex-direction:column;align-items:center;padding:0 34px;text-align:center}
+  .check-circle{
+    width:86px;height:86px;border-radius:50%;
+    background:linear-gradient(135deg,#34D17C,#12A150);
+    display:grid;place-items:center;color:#fff;
+    box-shadow:0 24px 48px -18px rgba(18,161,80,.75),0 0 0 14px rgba(38,190,110,.12);
+    position:relative;
+  }
+  .check-circle svg{width:40px;height:40px}
+  .check-ring{position:absolute;inset:-11px;border-radius:50%;border:1.5px dashed rgba(18,161,80,.5);animation:spin 9s linear infinite}
+  .success-view h3{margin-top:26px;font-size:22px;font-weight:800}
+  .success-view .goal-chip{margin-top:9px;font-size:12px;font-weight:700;color:#0B7A4E;background:#E8F9F0;border:1px solid #BCEBCE;border-radius:99px;padding:6px 14px}
+  .success-view .who{margin-top:8px;font-size:11px;color:#7E8CA3;line-height:1.6}
+  .save-btn.ghost{
+    width:auto;padding:0 24px;margin-top:24px;height:44px;font-size:12.5px;font-weight:700;letter-spacing:.5px;
+    background:transparent;color:#0B9D60;box-shadow:none;border:1.5px solid #A7E8C4;
+  }
+  .save-btn.ghost:hover{background:#ECFDF5;filter:none}
+
+  .home-indicator{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:112px;height:4px;border-radius:2px;background:rgba(15,19,32,.22);z-index:8;pointer-events:none}
+  .toast{
+    position:absolute;z-index:60;top:52px;left:50%;transform:translate(-50%,-8px);
+    display:flex;align-items:center;gap:7px;background:rgba(23,29,46,.92);color:#fff;
+    font-size:11px;font-weight:600;padding:9px 14px;border-radius:99px;
+    box-shadow:0 12px 26px -8px rgba(20,26,50,.5);
+    opacity:0;pointer-events:none;white-space:nowrap;
+    transition:opacity .22s ease,transform .22s ease;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast svg{width:13px;height:13px;color:#8BE6B5}
+
+  [data-zones].hl{border-radius:14px;outline:2px dashed rgba(16,185,129,.92);outline-offset:4px;animation:zonePulse 1.15s ease 2}
+  @keyframes zonePulse{0%{outline-color:rgba(16,185,129,.95)}50%{outline-color:rgba(16,185,129,.3)}100%{outline-color:rgba(16,185,129,.95)}}
+  .spot{
+    display:none;position:absolute;z-index:15;width:17px;height:17px;border-radius:50%;
+    background:linear-gradient(135deg,#22C55E,#0BA360);border:1.5px solid #fff;color:#fff;
+    font-size:9px;font-weight:800;font-style:normal;align-items:center;justify-content:center;
+    box-shadow:0 3px 8px -1px rgba(13,94,58,.5);cursor:pointer;transition:transform .15s ease;
+  }
+  .spot:hover{transform:scale(1.35)}
+  .device.show-spots .spot{display:flex}
+  .s-1{right:2px;top:6px}
+  .s-2{right:-7px;top:-9px}
+  .s-3{right:0;top:-12px}
+  .s-4{right:-7px;top:-9px}
+  .s-5{right:-7px;top:-9px}
+  .s-6{right:8px;top:-10px}
+</style>
+</head>
+<body>
+
+<div class="workspace" id="workspace">
+  <aside class="panel">
+    <div class="eyebrow">High-fidelity Prototype</div>
+    <div class="head-row">
+      <div>
+        <h1>设置打卡目标 · 高保真原型</h1>
+        <p>把想养成的习惯，设置成可执行、可坚持的每日打卡目标</p>
+      </div>
+      <div class="head-meta">
+        <span>390 × 844</span>
+        <span>目标设置</span>
+        <span>含微交互</span>
+      </div>
+    </div>
+
+    <div class="notes-head">
+      <h2>设计说明 · DESIGN NOTES</h2>
+      <span>点击条目，在右侧预览中高亮对应区域</span>
+    </div>
+
+    <div class="note-list" id="noteList">
+      <button class="note" data-note="1">
+        <span class="num">1</span>
+        <span class="note-body">
+          <span class="note-title">页面导航 · 返回路径始终可见</span>
+          <span class="note-desc">返回按钮固定在左上角，标题直白表述任务，不出现多余入口。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="2">
+        <span class="num">2</span>
+        <span class="note-body">
+          <span class="note-title">目标名称 · 自由填写，不设模板</span>
+          <span class="note-desc">不做预设习惯卡片，直接填写想养成的习惯或目标，例如学习、冥想、练字。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="3">
+        <span class="num">3</span>
+        <span class="note-body">
+          <span class="note-title">具体任务 · 把目标拆成可执行动作</span>
+          <span class="note-desc">“学习”会自动落到“背 20 个单词”，任务越具体，提醒到来时越容易直接开始。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="4">
+        <span class="num">4</span>
+        <span class="note-body">
+          <span class="note-title">打卡频率 · 每天或每周二选一</span>
+          <span class="note-desc">“每天”保持简单节奏；“每周”以步进器调整天数，反馈即时可见。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="5">
+        <span class="num">5</span>
+        <span class="note-body">
+          <span class="note-title">提醒时间 · 与 UI 同风格的拨轮调整</span>
+          <span class="note-desc">小时 / 分钟分列上下微调，分钟按 5 步进，可精确到任意作息时刻，视觉与整体一致。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="6">
+        <span class="num">6</span>
+        <span class="note-body">
+          <span class="note-title">保存操作 · 汇总确认 + 成功闭环</span>
+          <span class="note-desc">保存前卡片即时汇总目标信息；保存有加载与成功态，不产生歧义。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+    </div>
+
+    <div class="try-box">
+      <div class="try-head">
+        <h2>交互演示 · DEMO</h2>
+        <span>一键触发，观察右侧反馈</span>
+      </div>
+      <div class="try-grid">
+        <button class="try-chip" data-act="sample" type="button">填入示例</button>
+        <button class="try-chip" data-act="save" type="button">保存目标</button>
+      </div>
+    </div>
+
+    <div class="palette">
+      <span class="palette-label">TOKENS</span>
+      <span class="tok"><i class="dot" style="width:10px;height:10px;background:#0FA968"></i>Primary</span>
+      <span class="tok"><i class="dot" style="width:10px;height:10px;background:linear-gradient(135deg,#22C55E,#047857)"></i>CTA</span>
+      <span class="tok"><i class="dot" style="width:10px;height:10px;background:#111827"></i>Ink</span>
+      <span class="tok"><i class="dot" style="width:10px;height:10px;background:#F3F8F5;border:1px solid #DFE4EE"></i>Surface</span>
+    </div>
+  </aside>
+
+  <section class="device-zone">
+    <div class="device-toolbar">
+      <div class="live"><i></i>实时交互原型 · 可点击操作</div>
+      <div class="device-tools">
+        <button class="tool-btn" id="spotToggle" type="button">标注 1–6</button>
+        <button class="tool-btn" id="resetBtn" type="button">重置演示</button>
+      </div>
+    </div>
+
+    <div class="device" id="device">
+      <div class="screen" id="screen">
+        <i class="blob b1"></i>
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="sb-icons">
+            <svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="7" width="2.5" height="3" rx="0.7"/><rect x="4" y="5" width="2.5" height="5" rx="0.7"/><rect x="8" y="2.5" width="2.5" height="7.5" rx="0.7"/><rect x="12" y="0" width="2.5" height="10" rx="0.7"/></svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1.2 3.6a8 8 0 0 1 11.6 0M3.3 5.8a5.3 5.3 0 0 1 7.4 0M5.5 8a2.6 2.6 0 0 1 3 0"/></svg>
+            <span class="battery"><b></b></span>
+          </span>
+        </div>
+
+        <div class="content">
+          <div class="page-head" data-zones="1">
+            <span class="spot s-1" data-jump="1">1</span>
+            <button class="back-btn" id="backBtn" type="button" aria-label="返回">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5 8 12l6.5 7"/></svg>
+            </button>
+            <h2>设置打卡目标</h2>
+            <span class="sub-label">目标会同步到打卡首页</span>
+          </div>
+
+          <div data-zones="2">
+            <span class="spot s-2" data-jump="2">2</span>
+            <label class="flabel" for="goalInput">目标名称</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 3.2 7.2v9.6L12 21.2l8.8-4.4V7.2L12 2.8Z"/><path d="M3.4 7.4 12 11.8l8.6-4.4M12 11.8v9.2"/></svg>
+              <input id="goalInput" type="text" value="学习" placeholder="例如：学习 / 冥想 / 练字" spellcheck="false">
+            </div>
+            <p class="field-tip">填写你想坚持的习惯或目标名称</p>
+            <p class="fmsg" id="goalMsg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V13M12 16.6v.2"/></svg><span>请填写目标名称</span></p>
+          </div>
+
+          <div data-zones="3">
+            <span class="spot s-3" data-jump="3">3</span>
+            <label class="flabel" for="taskInput">具体任务</label>
+            <div class="input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h4l11-11-4-4L4 16v4ZM13.5 6.5l4 4"/></svg>
+              <input id="taskInput" type="text" value="背 20 个单词" spellcheck="false">
+            </div>
+            <p class="field-tip">任务越具体越好：例如“背 20 个单词”“23:30 前放下手机”</p>
+            <p class="fmsg" id="taskMsg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V13M12 16.6v.2"/></svg><span>请填写一项具体任务</span></p>
+          </div>
+
+          <div class="freq-row" data-zones="4">
+            <span class="spot s-4" data-jump="4">4</span>
+            <p class="flabel">打卡频率</p>
+            <div class="segmented">
+              <button class="seg-btn sel" data-freq="daily" type="button">每天打卡</button>
+              <button class="seg-btn" data-freq="weekly" type="button">每周打卡</button>
+            </div>
+            <div class="freq-desc">
+              <span id="freqDesc">每天坚持一次，更容易形成节奏</span>
+              <span class="stepper">
+                <button class="step-btn minus" id="minusBtn" type="button">−</button>
+                <b id="weekDays">5 天</b>
+                <button class="step-btn" id="plusBtn" type="button">＋</button>
+              </span>
+            </div>
+          </div>
+
+          <div data-zones="5">
+            <span class="spot s-5" data-jump="5">5</span>
+            <p class="flabel">提醒时间</p>
+            <div class="time-picker">
+              <div class="tp-col">
+                <button class="tp-arrow" id="hourUp" type="button" aria-label="小时加一">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 6-6 6 6"/></svg>
+                </button>
+                <span class="tp-value" id="tpHour">21</span>
+                <span class="tp-unit">时</span>
+                <button class="tp-arrow" id="hourDown" type="button" aria-label="小时减一">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 10 6 6 6-6"/></svg>
+                </button>
+              </div>
+              <span class="tp-colon">:</span>
+              <div class="tp-col">
+                <button class="tp-arrow" id="minUp" type="button" aria-label="分钟加五">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 6-6 6 6"/></svg>
+                </button>
+                <span class="tp-value" id="tpMin">30</span>
+                <span class="tp-unit">分</span>
+                <button class="tp-arrow" id="minDown" type="button" aria-label="分钟减五">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 10 6 6 6-6"/></svg>
+                </button>
+              </div>
+            </div>
+            <p class="field-tip">分钟按 5 分钟调整，可精确到自己的作息时刻</p>
+          </div>
+
+          <div class="summary-card">
+            <span>
+              <b id="summaryTask">背 20 个单词</b>
+              <small id="summaryFreq">学习 · 每天 1 次 · 21:30 提醒</small>
+            </span>
+            <span class="summary-tag">每天</span>
+          </div>
+
+          <div class="save-zone" data-zones="6">
+            <span class="spot s-6" data-jump="6">6</span>
+            <button class="save-btn" id="saveBtn" type="button">
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="txt-default">保存目标</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="success-view">
+          <div class="success-card">
+            <div class="check-circle">
+              <span class="check-ring"></span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 10 18 19.5 7"/></svg>
+            </div>
+            <h3>目标已创建</h3>
+            <span class="goal-chip" id="successGoal">学习 · 背 20 个单词</span>
+            <p class="who" id="successFreq">每天 1 次 · 21:30 提醒<br>保存成功，即将返回打卡首页</p>
+            <button class="save-btn ghost" id="goHomeBtn" type="button">返回打卡首页</button>
+          </div>
+        </div>
+
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+          <span id="toastText">目标已保存</span>
+        </div>
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#8B94A9;letter-spacing:.6px;font-weight:600">预览尺寸 390 × 844 · 整体已适配当前窗口，可直接整屏截图</div>
+  </section>
+</div>
+
+<script>
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
+  const workspace = $('#workspace');
+  function fit(){
+    const sx = (innerWidth - 52) / 1340, sy = (innerHeight - 52) / 800;
+    workspace.style.transform = `scale(${Math.max(.62, Math.min(Math.min(sx, sy), 1.25))})`;
+  }
+  addEventListener('resize', fit);
+  fit();
+
+  const screen = $('#screen');
+  const device = $('#device');
+  const toast = $('#toast'), toastText = $('#toastText');
+  const goalInput = $('#goalInput'), goalMsg = $('#goalMsg');
+  const taskInput = $('#taskInput'), taskMsg = $('#taskMsg');
+  const summaryTask = $('#summaryTask'), summaryFreq = $('#summaryFreq');
+  const freqDesc = $('#freqDesc'), weekDays = $('#weekDays');
+  const segBtns = $$('.seg-btn');
+  const saveBtn = $('#saveBtn');
+  const tpHourEl = $('#tpHour'), tpMinEl = $('#tpMin');
+  let tpHour = 21, tpMin = 30;
+  let toastTimer = null, returnTimer = null;
+
+  function showToast(text){
+    clearTimeout(toastTimer);
+    toastText.textContent = text;
+    toast.classList.add('show');
+    toastTimer = setTimeout(()=>toast.classList.remove('show'), 2100);
+  }
+
+  function currentFreq(){
+    const daily = segBtns[0].classList.contains('sel');
+    return daily ? {daily:true, days:1} : {daily:false, days:Number(weekDays.textContent.split(' ')[0])};
+  }
+  function timeStr(){ return `${String(tpHour).padStart(2,'0')}:${String(tpMin).padStart(2,'0')}`; }
+  function renderTime(){
+    tpHourEl.textContent = String(tpHour).padStart(2,'0');
+    tpMinEl.textContent = String(tpMin).padStart(2,'0');
+    syncSummary();
+  }
+  function adjustTime(part, delta){
+    if(part === 'hour') tpHour = (tpHour + delta + 24) % 24;
+    else tpMin = (tpMin + delta + 60) % 60;
+    renderTime();
+  }
+  let savedList = null;
+  function readExistingGoals(){
+    try{
+      const q = new URLSearchParams(location.search).get('goals');
+      if(q){
+        const parsed = JSON.parse(q);
+        if(Array.isArray(parsed)) return parsed;
+      }
+      const stored = JSON.parse(localStorage.getItem('eloCheckinGoals') || 'null');
+      if(Array.isArray(stored)) return stored;
+      const legacy = JSON.parse(localStorage.getItem('eloCheckinGoal') || 'null');
+      if(legacy && legacy.name){
+        return [{id:legacy.id || 'goal_1', name:legacy.name, task:legacy.task || '', freq:legacy.freq || {daily:true,days:1}, time:legacy.time || '21:30'}];
+      }
+    }catch(e){}
+    return [];
+  }
+  function appendNew(state){
+    const list = readExistingGoals();
+    const goal = {id:`goal_${Date.now()}`, name:state.name, task:state.task, freq:state.freq, time:state.time};
+    savedList = [...list, goal];
+    try{ localStorage.setItem('eloCheckinGoals', JSON.stringify(savedList)); }catch(e){}
+    return savedList;
+  }
+  function homeUrl(list){
+    return `checkin-prototype.html?goals=${encodeURIComponent(JSON.stringify(list))}`;
+  }
+  function syncSummary(){
+    const name = goalInput.value.trim() || '（待填写目标名称）';
+    const task = taskInput.value.trim();
+    const f = currentFreq();
+    const tag = f.daily ? '每天' : `每周 ${f.days} 天`;
+    const desc = f.daily
+      ? `每天 1 次 · ${timeStr()} 提醒`
+      : `每周 ${f.days} 次 · ${timeStr()} 提醒（打卡日）`;
+    summaryTask.textContent = task || '（待填写具体任务）';
+    summaryFreq.textContent = `${name} · ${desc}`;
+    $('.summary-tag').textContent = tag;
+    return {name, task, desc, tag, freq:f, time:timeStr()};
+  }
+
+  goalInput.addEventListener('input', ()=>{
+    goalMsg.classList.remove('show');
+    syncSummary();
+  });
+  taskInput.addEventListener('input', ()=>{
+    taskMsg.classList.remove('show');
+    syncSummary();
+  });
+
+  segBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      segBtns.forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+      const weekly = btn.dataset.freq === 'weekly';
+      $('.freq-row').classList.toggle('weekly', weekly);
+      freqDesc.textContent = weekly ? `每周选 ${weekDays.textContent} 天，给自己留一点弹性` : '每天坚持一次，更容易形成节奏';
+      syncSummary();
+    });
+  });
+  function step(delta){
+    const current = Number(weekDays.textContent.split(' ')[0]);
+    const next = Math.min(7, Math.max(1, current + delta));
+    weekDays.textContent = next + ' 天';
+    freqDesc.textContent = `每周选 ${next} 天，给自己留一点弹性`;
+    syncSummary();
+  }
+  $('#minusBtn').addEventListener('click', ()=>step(-1));
+  $('#plusBtn').addEventListener('click', ()=>step(1));
+
+  function resetDemo(){
+    clearTimeout(returnTimer);
+    savedList = null;
+    screen.classList.remove('logged');
+    saveBtn.classList.remove('loading');
+    goalInput.value = '学习';
+    taskInput.value = '背 20 个单词';
+    goalMsg.classList.remove('show');
+    taskMsg.classList.remove('show');
+    tpHour = 21; tpMin = 30;
+    renderTime();
+    segBtns.forEach((b,i)=>b.classList.toggle('sel', i === 0));
+    $('.freq-row').classList.remove('weekly');
+    weekDays.textContent = '5 天';
+    freqDesc.textContent = '每天坚持一次，更容易形成节奏';
+    syncSummary();
+    clearHighlight();
+    $$('.note').forEach(n=>n.classList.remove('is-active'));
+  }
+
+  function save(){
+    if(saveBtn.classList.contains('loading')) return;
+    const goal = goalInput.value.trim();
+    const task = taskInput.value.trim();
+    if(!goal){
+      goalMsg.classList.add('show');
+      goalInput.focus();
+      showToast('请先填写目标名称');
+      return;
+    }
+    if(!task){
+      taskMsg.classList.add('show');
+      taskInput.focus();
+      showToast('请填写一项具体任务');
+      return;
+    }
+    goalMsg.classList.remove('show');
+    taskMsg.classList.remove('show');
+    saveBtn.classList.add('loading');
+    const s = syncSummary();
+    const goalState = {name:s.name, task:s.task, freq:s.freq, time:s.time};
+    const list = appendNew(goalState);
+    setTimeout(()=>{
+      saveBtn.classList.remove('loading');
+      $('#successGoal').textContent = `${s.name} · ${s.task}`;
+      $('#successFreq').innerHTML = `${s.desc}<br>保存成功，即将返回打卡首页`;
+      screen.classList.add('logged');
+      returnTimer = setTimeout(()=>location.href = homeUrl(list), 1500);
+    }, 950);
+  }
+  saveBtn.addEventListener('click', save);
+  $('#goHomeBtn').addEventListener('click', ()=>{
+    const s = syncSummary();
+    const list = savedList || appendNew({name:s.name, task:s.task, freq:s.freq, time:s.time});
+    location.href = homeUrl(list);
+  });
+  $('#resetBtn').addEventListener('click', ()=>{ resetDemo(); showToast('演示状态已重置'); });
+  $('#backBtn').addEventListener('click', ()=>{
+    if(history.length > 1) history.back();
+    else location.href = 'checkin-prototype.html';
+  });
+  $('#hourUp').addEventListener('click', ()=>adjustTime('hour', 1));
+  $('#hourDown').addEventListener('click', ()=>adjustTime('hour', -1));
+  $('#minUp').addEventListener('click', ()=>adjustTime('min', 5));
+  $('#minDown').addEventListener('click', ()=>adjustTime('min', -5));
+
+  /* 标注高亮 */
+  function clearHighlight(){
+    $$('[data-zones]').forEach(el=>el.classList.remove('hl'));
+    device.classList.remove('hl-frame');
+  }
+  function setActiveNote(i){
+    $$('.note').forEach(n=>n.classList.toggle('is-active', Number(n.dataset.note) === i));
+  }
+  function highlightNote(i){
+    clearHighlight();
+    if(i === 7){ device.classList.add('hl-frame'); return; }
+    $$('[data-zones]').forEach(el=>{
+      if((el.dataset.zones||'').split(' ').map(Number).includes(i)) el.classList.add('hl');
+    });
+  }
+  $$('.note').forEach(n=>n.addEventListener('click', ()=>{
+    const i = Number(n.dataset.note);
+    setActiveNote(i); highlightNote(i);
+  }));
+  $$('.spot').forEach(spot=>spot.addEventListener('click', e=>{
+    e.stopPropagation();
+    const i = Number(spot.dataset.jump);
+    setActiveNote(i); highlightNote(i);
+  }));
+  $('#spotToggle').addEventListener('click', function(){
+    device.classList.toggle('show-spots');
+    this.classList.toggle('on', device.classList.contains('show-spots'));
+    this.textContent = device.classList.contains('show-spots') ? '标注已显示' : '标注 1–6';
+  });
+
+  $$('.try-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      if(chip.dataset.act === 'sample'){
+        if(screen.classList.contains('logged')) resetDemo();
+        goalInput.value = '学习';
+        taskInput.value = '背 20 个单词';
+        tpHour = 22; tpMin = 15;
+        renderTime();
+        segBtns.forEach((b,i)=>b.classList.toggle('sel', i === 0));
+        $('.freq-row').classList.remove('weekly');
+        showToast('已填入示例目标：22:15 提醒');
+      } else if(chip.dataset.act === 'save'){
+        if(screen.classList.contains('logged')) resetDemo();
+        save();
+      }
+    });
+  });
+  syncSummary();
+</script>
+</body>
+</html>

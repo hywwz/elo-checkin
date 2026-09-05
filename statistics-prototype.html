@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>打卡统计 · 高保真交互原型</title>
+<style>
+  :root{
+    --primary:#0FA968;
+    --primary-deep:#047857;
+    --grad-2:#37D67F;
+    --ink:#111827;
+    --sub:#5F6B84;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:var(--font);color:var(--ink);
+    background:
+      radial-gradient(1000px 560px at 12% -10%, #DDF9EA 0%, rgba(221,249,234,0) 60%),
+      radial-gradient(900px 620px at 112% 118%, #D7F7EC 0%, rgba(215,247,236,0) 55%),
+      #EAF3EC;
+    display:grid;place-items:center;overflow:hidden;
+  }
+  .workspace{width:1340px;height:800px;display:grid;grid-template-columns:616px 1fr;gap:34px;transform-origin:center center}
+
+  /* ---------- 左侧设计说明 ---------- */
+  .panel{
+    background:rgba(255,255,255,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.95);border-radius:28px;padding:26px 26px 20px;
+    box-shadow:0 30px 70px -34px rgba(24,94,62,.36);
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:2.6px;color:var(--primary)}
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:3px;background:linear-gradient(135deg,var(--primary),var(--grad-2));box-shadow:0 0 0 4px rgba(16,185,129,.16)}
+  .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-top:10px}
+  h1{font-size:25px;font-weight:800;line-height:1.25}
+  .head-row p{font-size:12.5px;color:var(--sub);line-height:1.6;margin-top:5px}
+  .head-meta{flex:0 0 auto;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;width:150px}
+  .head-meta span{font-size:10.5px;color:#4D5870;background:#EEF1F9;border:1px solid #E2E7F2;padding:4px 8px;border-radius:99px;font-weight:600;white-space:nowrap}
+  .notes-head{display:flex;align-items:baseline;justify-content:space-between;margin:17px 2px 6px}
+  .notes-head h2{font-size:13px;font-weight:800;letter-spacing:1.2px;color:#273149}
+  .notes-head span{font-size:10.5px;color:#8A96AC}
+  .note-list{display:flex;flex-direction:column;justify-content:space-evenly;flex:1 1 auto;min-height:0}
+  .note{
+    display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+    background:transparent;border:1px solid transparent;border-radius:14px;padding:9px 10px;
+    cursor:pointer;font-family:inherit;
+    transition:background .18s ease,border-color .18s ease;
+  }
+  .note:hover{background:#F1FBF6;border-color:#C9F2DF}
+  .note.is-active{background:linear-gradient(90deg,#E9FAF1,#F0FBF6);border-color:#A7E8C4;box-shadow:0 8px 18px -12px rgba(16,185,129,.45)}
+  .num{
+    flex:0 0 24px;width:24px;height:24px;display:grid;place-items:center;border-radius:50%;
+    font-size:11px;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,var(--primary),var(--grad-2));
+    box-shadow:0 4px 10px -3px rgba(13,148,90,.55);
+  }
+  .note-body{flex:1;min-width:0}
+  .note-title{display:block;font-size:13.5px;font-weight:700;color:#1B2438;line-height:1.35}
+  .note-desc{display:block;font-size:11.2px;color:#6A7590;line-height:1.5;margin-top:2px}
+  .note-go{color:#A9B2C8;font-size:13px}
+  .note:hover .note-go{color:var(--primary)}
+  .try-box{
+    flex:0 0 auto;margin:4px 0 0;background:#F4FBF7;border:1px dashed #BBE9D1;
+    border-radius:16px;padding:11px 12px 12px;
+  }
+  .try-head{display:flex;align-items:baseline;justify-content:space-between}
+  .try-head h2{font-size:11px;font-weight:800;letter-spacing:1.2px;color:#33405F}
+  .try-head span{font-size:10px;color:#96A1B8}
+  .try-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:9px}
+  .try-chip{
+    appearance:none;cursor:pointer;font-family:inherit;text-align:center;
+    font-size:11.5px;font-weight:700;color:#316E51;letter-spacing:.2px;
+    background:#fff;border:1px solid #DCEFE5;border-radius:12px;padding:8px 4px;
+    box-shadow:0 2px 6px -3px rgba(24,94,62,.18);
+    transition:transform .14s ease,border-color .15s ease,color .15s ease;
+  }
+  .try-chip:hover{color:#0B9D60;border-color:#86EFAC;transform:translateY(-1px)}
+  .try-chip:active{transform:scale(.96)}
+  .palette{margin-top:auto;padding-top:10px;display:flex;align-items:center;gap:12px}
+  .palette-label{font-size:10px;font-weight:700;color:#9AA5BA;letter-spacing:1.5px;white-space:nowrap}
+  .palette .tok{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:#65708A;background:#F5F7FC;border:1px solid #EAEEF6;border-radius:8px;padding:4px 7px;white-space:nowrap}
+  .palette .dot{width:10px;height:10px;border-radius:3.5px}
+
+  /* ---------- 右侧手机 ---------- */
+  .device-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;min-width:0}
+  .device-toolbar{display:flex;align-items:center;justify-content:space-between;width:378px;color:#5B6478}
+  .live{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:#46506A;letter-spacing:.8px}
+  .live i{width:7px;height:7px;border-radius:50%;background:#25C26E;box-shadow:0 0 0 4px rgba(37,194,110,.16);animation:livePulse 1.8s infinite}
+  @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .device-tools{display:flex;gap:7px}
+  .tool-btn{appearance:none;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;color:#4B5670;background:rgba(255,255,255,.85);border:1px solid rgba(151,163,189,.38);border-radius:99px;padding:6px 12px;box-shadow:0 3px 10px -5px rgba(50,66,110,.25);transition:all .18s ease}
+  .tool-btn:hover{border-color:#B8C3E4;transform:translateY(-1px)}
+  .tool-btn.on{background:#14532D;color:#fff;border-color:#14532D}
+  .device{
+    position:relative;width:378px;height:752px;background:#12141A;border:1px solid #000;border-radius:58px;padding:9px;
+    box-shadow:0 0 0 2px #2A2E38,0 42px 90px -28px rgba(24,34,64,.72),0 14px 38px -18px rgba(24,34,64,.5),inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+  .device.hl-frame{outline:2.5px dashed var(--primary);outline-offset:8px;animation:zonePulse 1.2s ease 2}
+  .screen{
+    position:relative;width:100%;height:100%;
+    background:
+      radial-gradient(640px 320px at 92% -5%, rgba(16,185,129,.13), rgba(16,185,129,0) 58%),
+      radial-gradient(560px 300px at -8% 2%, rgba(74,222,128,.10), rgba(74,222,128,0) 55%),
+      linear-gradient(180deg,#F9FCFA 0%,#F3F8F5 100%);
+    border-radius:50px;overflow:hidden;display:flex;flex-direction:column;
+  }
+  .statusbar{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;height:34px;padding:0 26px;color:#141A28;font-size:12px;font-weight:700}
+  .sb-icons{display:flex;align-items:center;gap:5px}
+  .battery{position:relative;width:19px;height:9px;border:1px solid #394155;border-radius:2.5px;padding:1.5px;margin-left:2px}
+  .battery::after{content:"";position:absolute;right:-3px;top:2.5px;width:1.5px;height:4px;background:#394155;border-radius:0 2px 2px 0}
+  .battery b{display:block;width:72%;height:100%;background:#141A28;border-radius:1px}
+  .content{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;padding:6px 25px 12px;min-height:0}
+  .blob{position:absolute;border-radius:50%;filter:blur(10px);pointer-events:none}
+  .blob.b1{width:120px;height:120px;background:rgba(16,185,129,.12);top:-32px;right:-24px}
+
+  .page-head{position:relative;display:flex;align-items:center;gap:10px;min-height:48px}
+  .back-btn{
+    width:34px;height:34px;border-radius:50%;border:1px solid #E2E7F0;
+    background:#fff;color:#4B5670;cursor:pointer;display:grid;place-items:center;flex:0 0 auto;
+    box-shadow:0 5px 12px -7px rgba(30,55,80,.4);transition:all .15s ease;
+  }
+  .back-btn:hover{transform:translateX(-2px)}
+  .back-btn svg{width:16px;height:16px}
+  .page-title h2{font-size:20px;font-weight:800;letter-spacing:.5px}
+  .page-title p{font-size:9.5px;font-weight:600;color:#A0AABE;margin-top:1px;white-space:nowrap}
+  .period{
+    position:relative;display:flex;margin-left:auto;background:#EAF0EA;border-radius:12px;padding:3px;
+  }
+  .period button{
+    appearance:none;cursor:pointer;font-family:inherit;
+    font-size:10.5px;font-weight:700;color:#75806F;
+    border:0;border-radius:9px;padding:6px 9px;background:transparent;
+    transition:all .18s ease;
+  }
+  .period button.sel{background:#fff;color:#0B9D60;box-shadow:0 4px 10px -6px rgba(30,70,45,.45)}
+  .delta.down svg{transform:rotate(180deg);color:#E8852B}
+
+  /* 完成率主卡 */
+  .rate-card{
+    position:relative;
+    background:linear-gradient(150deg,#14B96C 0%,#0BA360 55%,#047857 100%);
+    border-radius:26px;padding:17px 19px 15px;color:#fff;overflow:hidden;
+    box-shadow:0 22px 42px -20px rgba(4,120,87,.58), inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .rate-card::before{content:"";position:absolute;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.09);top:-88px;right:-54px}
+  .rate-top{position:relative;display:flex;align-items:center;justify-content:space-between}
+  .rate-label{font-size:11px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.9)}
+  .delta{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;color:#0B7A4E;background:#fff;border-radius:99px;padding:4px 9px}
+  .delta svg{width:10px;height:10px;color:#22C55E}
+  .rate-body{position:relative;display:flex;align-items:center;gap:17px;margin-top:12px}
+  .ring{position:relative;width:86px;height:86px;flex:0 0 auto}
+  .ring svg{width:86px;height:86px;transform:rotate(-90deg)}
+  .ring .track{fill:none;stroke:rgba(255,255,255,.22);stroke-width:8}
+  .ring .bar{fill:none;stroke:#fff;stroke-width:8;stroke-linecap:round;stroke-dasharray:213.6;stroke-dashoffset:29.9;transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.3,1)}
+  .ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800}
+  .ring b small{font-size:10px;font-weight:700;color:rgba(255,255,255,.75);margin-top:3px;margin-left:2px}
+  .rate-copy{flex:1;min-width:0}
+  .rate-copy b{display:block;font-size:14px;font-weight:800}
+  .rate-copy p{font-size:10.5px;color:rgba(255,255,255,.8);margin-top:4px;line-height:1.55}
+  .rate-copy .bar{position:relative;height:5px;border-radius:99px;background:rgba(255,255,255,.22);margin-top:10px;overflow:hidden}
+  .rate-copy .bar i{position:absolute;inset:0 auto 0 0;width:87%;border-radius:99px;background:#fff;transition:width .6s cubic-bezier(.2,.8,.3,1)}
+
+  /* 双统计卡 */
+  .mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:11px}
+  .mini{
+    display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E2EFE7;
+    border-radius:18px;padding:11px 12px;box-shadow:0 10px 22px -20px rgba(20,65,46,.5);
+  }
+  .mini .m-icon{width:36px;height:36px;border-radius:12px;background:#E8F9F0;color:#0B9D60;display:grid;place-items:center;flex:0 0 auto}
+  .mini .m-icon svg{width:18px;height:18px}
+  .mini .m-icon.warn{background:#FFF5E8;color:#E8852B}
+  .mini b{display:block;font-size:17px;font-weight:800;line-height:1.2}
+  .mini small{display:block;font-size:9.5px;color:#96A1B8;margin-top:1px}
+
+  /* 通用白卡 */
+  .card{
+    background:#fff;border:1px solid #E2EFE7;border-radius:22px;
+    padding:14px 15px;box-shadow:0 12px 26px -22px rgba(20,65,46,.55);
+  }
+  .card-head{display:flex;align-items:center;justify-content:space-between}
+  .card-head h3{font-size:12.5px;font-weight:800;letter-spacing:.5px;color:#243042}
+  .card-head span{font-size:9.5px;color:#A2ADC0;font-weight:600}
+  .trend{height:64px;display:flex;align-items:flex-end;gap:8px;margin-top:10px;padding:0 2px}
+  .trend .b-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px}
+  .trend .b-val{font-size:8px;color:#9AA6BA;font-weight:700;height:10px}
+  .trend .b-bar{width:100%;max-width:19px;height:0;min-height:4px;border-radius:6px;background:linear-gradient(180deg,#34D399,#0BA360);transition:height .6s cubic-bezier(.2,.8,.3,1)}
+  .trend .b-col.zero .b-bar{background:#E7EBE7}
+  .trend .b-day{font-size:8.5px;color:#8E99AE;font-weight:700}
+  .goals{margin-top:10px}
+  .goal-row + .goal-row{margin-top:10px}
+  .goal-row .g-head{display:flex;align-items:center;justify-content:space-between;font-size:11px}
+  .goal-row .g-head b{font-weight:800;color:#243042}
+  .goal-row .g-head span{font-size:10px;color:#8A96AC;font-weight:700}
+  .goal-row .g-head span em{font-style:normal;color:#0B9D60}
+  .goal-row .g-track{height:6px;border-radius:99px;background:#EAF0EA;margin-top:6px;overflow:hidden}
+  .goal-row .g-track i{display:block;height:100%;width:80%;border-radius:99px;background:linear-gradient(90deg,#22C55E,#0BA360);transition:width .6s cubic-bezier(.2,.8,.3,1)}
+  .foot-note{height:18px;line-height:18px;margin-top:auto;text-align:center;font-family:var(--font);font-size:10px;font-weight:400;color:#9AA6BA;letter-spacing:.3px}
+
+  .home-indicator{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:112px;height:4px;border-radius:2px;background:rgba(15,19,32,.22);z-index:8;pointer-events:none}
+  .toast{
+    position:absolute;z-index:60;top:52px;left:50%;transform:translate(-50%,-8px);
+    display:flex;align-items:center;gap:7px;background:rgba(23,29,46,.92);color:#fff;
+    font-size:11px;font-weight:600;padding:9px 14px;border-radius:99px;
+    box-shadow:0 12px 26px -8px rgba(20,26,50,.5);
+    opacity:0;pointer-events:none;white-space:nowrap;
+    transition:opacity .22s ease,transform .22s ease;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast svg{width:13px;height:13px;color:#8BE6B5}
+  [data-zones].hl{border-radius:14px;outline:2px dashed rgba(16,185,129,.92);outline-offset:4px;animation:zonePulse 1.15s ease 2}
+  @keyframes zonePulse{0%{outline-color:rgba(16,185,129,.95)}50%{outline-color:rgba(16,185,129,.3)}100%{outline-color:rgba(16,185,129,.95)}}
+  .spot{
+    display:none;position:absolute;z-index:15;width:17px;height:17px;border-radius:50%;
+    background:linear-gradient(135deg,#22C55E,#0BA360);border:1.5px solid #fff;color:#fff;
+    font-size:9px;font-weight:800;font-style:normal;align-items:center;justify-content:center;
+    box-shadow:0 3px 8px -1px rgba(13,94,58,.5);cursor:pointer;transition:transform .15s ease;
+  }
+  .spot:hover{transform:scale(1.35)}
+  .device.show-spots .spot{display:flex}
+  .s-1{right:2px;top:-10px}
+  .s-2{left:2px;top:-9px}
+  .s-3{right:4px;top:-9px}
+  .s-4{right:6px;top:-9px}
+  .s-5{right:6px;top:-9px}
+  .s-6{right:6px;top:-9px}
+</style>
+</head>
+<body>
+
+<div class="workspace" id="workspace">
+  <aside class="panel">
+    <div class="eyebrow">High-fidelity Prototype</div>
+    <div class="head-row">
+      <div>
+        <h1>打卡统计 · 高保真原型</h1>
+        <p>个人数据回顾 · 完成率、连续记录与目标进度，一眼看清坚持成果</p>
+      </div>
+      <div class="head-meta">
+        <span>390 × 844</span>
+        <span>统计回顾</span>
+        <span>含微交互</span>
+      </div>
+    </div>
+
+    <div class="notes-head">
+      <h2>设计说明 · DESIGN NOTES</h2>
+      <span>点击条目，在右侧预览中高亮对应区域</span>
+    </div>
+
+    <div class="note-list" id="noteList">
+      <button class="note" data-note="1">
+        <span class="num">1</span>
+        <span class="note-body">
+          <span class="note-title">页面导航 · 返回主页面 + 周期切换</span>
+          <span class="note-desc">左上角返回箭头直达打卡首页；本月 / 上月 / 今年三种周期并列，切换成本一步完成。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="2">
+        <span class="num">2</span>
+        <span class="note-body">
+          <span class="note-title">完成率主卡 · 数字即主角</span>
+          <span class="note-desc">大号完成率与进度环同屏，旁附较上月变化，突出“做得如何”。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="3">
+        <span class="num">3</span>
+        <span class="note-body">
+          <span class="note-title">关键记录 · 只保留两项</span>
+          <span class="note-desc">累计坚持与最长连续是最有激励感的两项记录，克制呈现避免信息过载。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="4">
+        <span class="num">4</span>
+        <span class="note-body">
+          <span class="note-title">趋势图 · 一周完成节奏</span>
+          <span class="note-desc">细长柱状图展示最近 7 天完成情况，曲线轻量，重点看节奏而非精确数值。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="5">
+        <span class="num">5</span>
+        <span class="note-body">
+          <span class="note-title">目标进度 · 具体到每个目标</span>
+          <span class="note-desc">学习、冥想、早睡分别显示完成次数与进度条，哪里弱一眼可见。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+      <button class="note" data-note="6">
+        <span class="num">6</span>
+        <span class="note-body">
+          <span class="note-title">说明与克制 · 数据只服务自己</span>
+          <span class="note-desc">页脚仅一句轻说明，无排行与比较，保持“个人复盘”的温柔语境。</span>
+        </span>
+        <span class="note-go">↗</span>
+      </button>
+    </div>
+
+    <div class="try-box">
+      <div class="try-head">
+        <h2>交互演示 · DEMO</h2>
+        <span>一键触发，观察右侧反馈</span>
+      </div>
+      <div class="try-grid">
+        <button class="try-chip" data-act="year" type="button">切换今年</button>
+        <button class="try-chip" data-act="reset" type="button">重置本月</button>
+      </div>
+    </div>
+
+    <div class="palette">
+      <span class="palette-label">TOKENS</span>
+      <span class="tok"><i class="dot" style="background:#0FA968"></i>Primary</span>
+      <span class="tok"><i class="dot" style="background:linear-gradient(135deg,#22C55E,#047857)"></i>Card</span>
+      <span class="tok"><i class="dot" style="background:#111827"></i>Ink</span>
+      <span class="tok"><i class="dot" style="background:#F3F8F5;border:1px solid #DFE4EE"></i>Surface</span>
+    </div>
+  </aside>
+
+  <section class="device-zone">
+    <div class="device-toolbar">
+      <div class="live"><i></i>实时交互原型 · 可点击操作</div>
+      <div class="device-tools">
+        <button class="tool-btn" id="spotToggle" type="button">标注 1–6</button>
+        <button class="tool-btn" id="resetBtn" type="button">重置演示</button>
+      </div>
+    </div>
+
+    <div class="device" id="device">
+      <div class="screen" id="screen">
+        <i class="blob b1"></i>
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="sb-icons">
+            <svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="7" width="2.5" height="3" rx="0.7"/><rect x="4" y="5" width="2.5" height="5" rx="0.7"/><rect x="8" y="2.5" width="2.5" height="7.5" rx="0.7"/><rect x="12" y="0" width="2.5" height="10" rx="0.7"/></svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1.2 3.6a8 8 0 0 1 11.6 0M3.3 5.8a5.3 5.3 0 0 1 7.4 0M5.5 8a2.6 2.6 0 0 1 3 0"/></svg>
+            <span class="battery"><b></b></span>
+          </span>
+        </div>
+
+        <div class="content">
+          <div class="page-head" data-zones="1">
+            <span class="spot s-1" data-jump="1">1</span>
+            <button class="back-btn" id="backBtn" type="button" aria-label="返回打卡首页">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5 8 12l6.5 7"/></svg>
+            </button>
+            <div class="page-title">
+              <h2>统计</h2>
+              <p>回顾每一次微小坚持</p>
+            </div>
+            <div class="period">
+              <button class="sel" data-period="current" type="button">本月</button>
+              <button data-period="last" type="button">上月</button>
+              <button data-period="year" type="button">今年</button>
+            </div>
+          </div>
+
+          <div class="rate-card" data-zones="2">
+            <span class="spot s-2" data-jump="2">2</span>
+            <div class="rate-top">
+              <span class="rate-label" id="rateLabel">本月打卡率</span>
+              <span class="delta" id="deltaChip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 6-6 6 6"/></svg>
+                <span id="deltaText">较上月 +8%</span>
+              </span>
+            </div>
+            <div class="rate-body">
+              <div class="ring">
+                <svg viewBox="0 0 86 86">
+                  <circle class="track" cx="43" cy="43" r="34"></circle>
+                  <circle class="bar" id="rateRing" cx="43" cy="43" r="34"></circle>
+                </svg>
+                <b id="rateNum">86<small>%</small></b>
+              </div>
+              <div class="rate-copy">
+                <b id="rateTitle">本月已打卡 26 天</b>
+                <p id="rateDesc">目标 30 次 · 剩余 4 次，继续保持节奏</p>
+                <span class="bar"><i id="rateFill"></i></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini-stats" data-zones="3">
+            <span class="spot s-3" data-jump="3">3</span>
+            <div class="mini">
+              <span class="m-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.2s4.8 6 4.8 10.2a4.8 4.8 0 0 1-9.6 0C7.2 8.2 12 2.2 12 2.2Z"/></svg></span>
+              <span><b id="totalDays">63 天</b><small id="totalLabel">累计坚持</small></span>
+            </div>
+            <div class="mini">
+              <span class="m-icon warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2.8 4.5 13.5h6L11 21.2l8.5-10.7h-6L13 2.8Z"/></svg></span>
+              <span><b id="streakDays">12 天</b><small id="streakLabel">最长连续</small></span>
+            </div>
+          </div>
+
+          <div class="card" data-zones="4">
+            <span class="spot s-4" data-jump="4">4</span>
+            <div class="card-head">
+              <h3 id="trendTitle">最近 7 天</h3>
+              <span id="trendCaption">柱高 = 当天完成任务数</span>
+            </div>
+            <div class="trend" id="trend"></div>
+          </div>
+
+          <div class="card" data-zones="5" style="margin-top:11px">
+            <span class="spot s-5" data-jump="5">5</span>
+            <div class="card-head">
+              <h3>目标完成</h3>
+              <span>次数 / 目标</span>
+            </div>
+            <div class="goals" id="goalList">
+              <div class="goal-row">
+                <div class="g-head"><b>学习</b><span><em>24</em> / 30 次</span></div>
+                <span class="g-track"><i style="width:80%"></i></span>
+              </div>
+              <div class="goal-row">
+                <div class="g-head"><b>冥想</b><span><em>15</em> / 20 次</span></div>
+                <span class="g-track"><i style="width:75%"></i></span>
+              </div>
+              <div class="goal-row">
+                <div class="g-head"><b>早睡</b><span><em>21</em> / 30 次</span></div>
+                <span class="g-track"><i style="width:70%"></i></span>
+              </div>
+            </div>
+          </div>
+
+          <p class="foot-note" data-zones="6">记录只属于你自己，进步都在数据里</p>
+        </div>
+
+        <div class="toast" id="toast" role="status">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+          <span id="toastText">已切换</span>
+        </div>
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#8B94A9;letter-spacing:.6px;font-weight:600">预览尺寸 390 × 844 · 整体已适配当前窗口，可直接整屏截图</div>
+  </section>
+</div>
+
+<script>
+  const $ = (s, root=document) => root.querySelector(s);
+  const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
+  const workspace = $('#workspace');
+  function fit(){
+    const sx = (innerWidth - 52) / 1340, sy = (innerHeight - 52) / 800;
+    workspace.style.transform = `scale(${Math.max(.62, Math.min(Math.min(sx, sy), 1.25))})`;
+  }
+  addEventListener('resize', fit);
+  fit();
+
+  const device = $('#device');
+  const toast = $('#toast'), toastText = $('#toastText');
+  const periodBtns = $$('.period button');
+  const rateNum = $('#rateNum'), rateRing = $('#rateRing'), rateFill = $('#rateFill');
+  const rateLabel = $('#rateLabel'), rateTitle = $('#rateTitle'), rateDesc = $('#rateDesc');
+  const deltaChip = $('#deltaChip'), deltaText = $('#deltaText');
+  const totalDays = $('#totalDays'), streakDays = $('#streakDays');
+  const totalLabel = $('#totalLabel'), streakLabel = $('#streakLabel');
+  const trendTitle = $('#trendTitle'), trendCaption = $('#trendCaption');
+  const trendEl = $('#trend');
+  const CIRC = 2 * Math.PI * 34;
+  let toastTimer = null;
+
+  const DATA = {
+    current:{
+      period:'本月打卡率', delta:'较上月 +8%',
+      rate:86,
+      title:'本月已打卡 26 天', desc:'目标 30 次 · 剩余 4 次，继续保持节奏',
+      totals:'63 天', streak:'12 天', totalLabel:'累计坚持', streakLabel:'最长连续',
+      trendTitle:'最近 7 天', trendCaption:'柱高 = 当天完成任务数',
+      bars:[2,3,3,4,5,3,2], barMax:5, labels:['六','日','一','二','三','四','五'],
+      goals:[['学习',24,30],['冥想',15,20],['早睡',21,30]]
+    },
+    last:{
+      period:'上月打卡率', delta:'较上月 -8%',
+      rate:78,
+      title:'上月已打卡 23 天', desc:'目标 31 次 · 完成率 78%，本月继续加油',
+      totals:'63 天', streak:'12 天', totalLabel:'累计坚持', streakLabel:'最长连续',
+      trendTitle:'最近 7 天', trendCaption:'柱高 = 当天完成任务数',
+      bars:[1,2,2,3,3,2,1], barMax:5, labels:['六','日','一','二','三','四','五'],
+      goals:[['学习',22,30],['冥想',12,20],['早睡',18,30]]
+    },
+    year:{
+      period:'年度打卡率', delta:'较去年 +5%',
+      rate:82,
+      title:'今年已打卡 236 天', desc:'目标 288 次 · 剩余 52 次，按自己的节奏走',
+      totals:'236 天', streak:'45 天', totalLabel:'今年坚持', streakLabel:'年度最长',
+      trendTitle:'年度趋势', trendCaption:'柱高 = 当月打卡天数',
+      bars:[18,20,21,23,20,22,19,21,18,19,17,18], barMax:30, labels:['1','2','3','4','5','6','7','8','9','10','11','12'],
+      goals:[['学习',236,288],['冥想',150,240],['早睡',190,288]]
+    }
+  };
+
+  function showToast(text){
+    clearTimeout(toastTimer);
+    toastText.textContent = text;
+    toast.classList.add('show');
+    toastTimer = setTimeout(()=>toast.classList.remove('show'), 2000);
+  }
+  function render(key){
+    const d = DATA[key];
+    rateLabel.textContent = d.period;
+    deltaText.textContent = d.delta;
+    deltaChip.classList.toggle('down', d.delta.includes('-'));
+    rateNum.innerHTML = `${d.rate}<small>%</small>`;
+    rateRing.style.strokeDashoffset = CIRC * (1 - d.rate / 100);
+    rateFill.style.width = d.rate + '%';
+    rateTitle.textContent = d.title;
+    rateDesc.textContent = d.desc;
+    totalDays.textContent = d.totals;
+    streakDays.textContent = d.streak;
+    totalLabel.textContent = d.totalLabel;
+    streakLabel.textContent = d.streakLabel;
+    trendTitle.textContent = d.trendTitle;
+    trendCaption.textContent = d.trendCaption;
+    renderTrend(d.bars, d.barMax, d.labels);
+    renderGoals(d.goals);
+  }
+  function renderTrend(bars, max, labels){
+    trendEl.innerHTML = bars.map((h,i)=>`
+      <div class="b-col ${h === 0 ? 'zero':''}">
+        <span class="b-val">${h === 0 ? '' : h}</span>
+        <span class="b-bar" style="height:${Math.round(h / max * 100)}%"></span>
+        <span class="b-day">${labels[i]}</span>
+      </div>`).join('');
+  }
+  function renderGoals(goals){
+    $('#goalList').innerHTML = goals.map(g=>`
+      <div class="goal-row">
+        <div class="g-head"><b>${g[0]}</b><span><em>${g[1]}</em> / ${g[2]} 次</span></div>
+        <span class="g-track"><i style="width:${Math.round(g[1]/g[2]*100)}%"></i></span>
+      </div>`).join('');
+  }
+
+  periodBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      periodBtns.forEach(b=>b.classList.remove('sel'));
+      btn.classList.add('sel');
+      render(btn.dataset.period);
+      const label = {current:'本月', last:'上月', year:'今年'}[btn.dataset.period];
+      showToast(`已切换至${label}数据`);
+    });
+  });
+
+  function resetDemo(){
+    periodBtns.forEach((b,i)=>b.classList.toggle('sel', i === 0));
+    render('current');
+    clearHighlight();
+    $$('.note').forEach(n=>n.classList.remove('is-active'));
+  }
+  $('#resetBtn').addEventListener('click', ()=>{ resetDemo(); showToast('已重置为本月数据'); });
+  $('#backBtn').addEventListener('click', ()=>{
+    if(history.length > 1) history.back();
+    else location.href = 'checkin-prototype.html';
+  });
+
+  function clearHighlight(){
+    $$('[data-zones]').forEach(el=>el.classList.remove('hl'));
+    device.classList.remove('hl-frame');
+  }
+  function setActiveNote(i){
+    $$('.note').forEach(n=>n.classList.toggle('is-active', Number(n.dataset.note) === i));
+  }
+  function highlightNote(i){
+    clearHighlight();
+    if(i === 7){ device.classList.add('hl-frame'); return; }
+    $$('[data-zones]').forEach(el=>{
+      if((el.dataset.zones||'').split(' ').map(Number).includes(i)) el.classList.add('hl');
+    });
+  }
+  $$('.note').forEach(n=>n.addEventListener('click', ()=>{
+    const i = Number(n.dataset.note);
+    setActiveNote(i); highlightNote(i);
+  }));
+  $$('.spot').forEach(spot=>spot.addEventListener('click', e=>{
+    e.stopPropagation();
+    const i = Number(spot.dataset.jump);
+    setActiveNote(i); highlightNote(i);
+  }));
+  $('#spotToggle').addEventListener('click', function(){
+    device.classList.toggle('show-spots');
+    this.classList.toggle('on', device.classList.contains('show-spots'));
+    this.textContent = device.classList.contains('show-spots') ? '标注已显示' : '标注 1–6';
+  });
+
+  $$('.try-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      if(chip.dataset.act === 'year'){
+        $('.period button[data-period="year"]').click();
+      } else {
+        resetDemo();
+      }
+    });
+  });
+  resetDemo();
+</script>
+</body>
+</html>
