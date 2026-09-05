@@ -183,6 +183,7 @@ Authorization: Bearer <token>
 ```json
 {
   "account": "user@elo.cn",
+  "nickname": "小陈",
   "password": "elo@2026"
 }
 ```
@@ -190,6 +191,7 @@ Authorization: Bearer <token>
 校验规则：
 
 - `account`：必填，长度 ≥ 3；若为邮箱则需格式正确；也可支持手机号。
+- `nickname`：可选，长度 ≤ 16；不填时默认取账号前缀（如 `user@elo.cn` → `user`）。
 - `password`：必填，长度 ≥ 8。
 
 成功响应：
@@ -202,7 +204,7 @@ Authorization: Bearer <token>
     "user": {
       "id": "user_123",
       "account": "user@elo.cn",
-      "nickname": "user"
+      "nickname": "小陈"
     }
   }
 }

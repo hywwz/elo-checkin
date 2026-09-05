@@ -28,6 +28,19 @@
         </view>
 
         <view class="field-group">
+          <text class="label">昵称<text class="optional">（可选）</text></text>
+          <input
+            class="field"
+            v-model="nickname"
+            type="text"
+            maxlength="16"
+            placeholder="给自己起个称呼，不填则用账号名"
+            placeholder-class="ph"
+          />
+          <text v-if="errors.nickname" class="err">{{ errors.nickname }}</text>
+        </view>
+
+        <view class="field-group">
           <text class="label">密码<text class="star">*</text></text>
           <view class="pwd-wrap">
             <input
@@ -67,6 +80,7 @@ export default {
   data() {
     return {
       account: '',
+      nickname: '',
       password: '',
       showPwd: false,
       loading: false,
@@ -90,6 +104,9 @@ export default {
       } else if (acc.includes('@') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(acc)) {
         errors.account = '邮箱格式不正确，请检查'
       }
+      if (this.nickname.trim().length > 16) {
+        errors.nickname = '昵称不能超过 16 个字符'
+      }
       if (!this.password) {
         errors.password = '请输入密码'
       } else if (this.password.length < 8) {
@@ -105,6 +122,7 @@ export default {
       try {
         await post('/auth/register', {
           account: this.account.trim(),
+          nickname: this.nickname.trim(),
           password: this.password
         })
         this.loading = false
@@ -194,6 +212,12 @@ export default {
 .star {
   color: #C03A3F;
   margin-left: 4rpx;
+}
+.optional {
+  font-size: 20rpx;
+  font-weight: 500;
+  color: #98A3BA;
+  margin-left: 6rpx;
 }
 .field {
   width: 100%;

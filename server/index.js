@@ -62,6 +62,7 @@ async function handleAuthRegister(req, res) {
   const body = await readBody(req)
   const account = String(body.account || '').trim()
   const password = String(body.password || '')
+  const nicknameInput = String(body.nickname || '').trim()
 
   if (account.length < 3) {
     return send(res, 400, 10004, '账号长度不能少于 3 位')
@@ -72,13 +73,18 @@ async function handleAuthRegister(req, res) {
   if (password.length < 8) {
     return send(res, 400, 10004, '密码长度至少为 8 位')
   }
+  if (nicknameInput.length > 16) {
+    return send(res, 400, 10004, '昵称长度不能超过 16 个字符')
+  }
+
+  const nickname = nicknameInput || accountNickname(account)
 
   const id = cryptoRandomId('user')
   const passwordHash = hashPassword(password)
   try {
     db.prepare(
       'INSERT INTO users (id, account, nickname, password_hash, created_at) VALUES (?, ?, ?, ?, ?)'
-    ).run(id, account, accountNickname(account), passwordHash, nowIso())
+    ).run(id, account, nickname, passwordHash, nowIso())
   } catch (err) {
     if (String(err.message).includes('UNIQUE')) {
       return send(res, 409, 10002, '账号已存在')
@@ -86,7 +92,7 @@ async function handleAuthRegister(req, res) {
     throw err
   }
   return send(res, 200, 0, '注册成功', {
-    user: publicUser({ id, account, nickname: accountNickname(account) })
+    user: publicUser({ id, account, nickname })
   })
 }
 
