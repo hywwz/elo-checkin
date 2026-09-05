@@ -1,0 +1,53 @@
+import crypto from 'node:crypto'
+import { db, nowIso } from './db.js'
+
+const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000
+
+export function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex')
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex')
+  return `${salt}:${hash}`
+}
+
+export function verifyPassword(password, stored) {
+  const [salt, hash] = stored.split(':')
+  const candidate = crypto.scryptSync(password, salt, 64).toString('hex')
+  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(candidate, 'hex'))
+}
+
+export function createSession(userId) {
+  const token = crypto.randomBytes(32).toString('hex')
+  const expiresAt = new Date(Date.now() + TOKEN_TTL_MS).toISOString()
+  db.prepare('INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)').run(
+    token,
+    userId,
+    expiresAt
+  )
+  return token
+}
+
+export function publicUser(user) {
+  return {
+    id: user.id,
+    account: user.account,
+    nickname: user.nickname
+  }
+}
+
+export function findUserByToken(token) {
+  if (!token) return null
+  const row = db
+    .prepare(
+      `SELECT u.id, u.account, u.nickname, u.created_at
+       FROM sessions s
+       JOIN users u ON u.id = s.user_id
+       WHERE s.token = ?`
+    )
+    .get(token)
+  if (!row) return null
+  return row
+}
+
+export function cleanupExpiredSessions() {
+  db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(nowIso())
+}
