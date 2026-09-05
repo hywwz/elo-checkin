@@ -4,7 +4,7 @@
       <view class="home-head">
         <view class="head-copy">
           <text class="kicker">{{ dateLabel }}</text>
-          <text class="title">早上好，陈晨</text>
+          <text class="title">{{ greeting }}，{{ displayName }}</text>
           <text class="sub">今天也给自己打个卡吧</text>
         </view>
         <view class="head-actions">
@@ -13,7 +13,7 @@
             <view class="bar b2"></view>
             <view class="bar b3"></view>
           </view>
-          <view class="avatar">晨</view>
+          <view class="avatar">{{ avatarText }}</view>
         </view>
       </view>
 
@@ -74,6 +74,9 @@ export default {
   data() {
     return {
       dateLabel: '',
+      greeting: '你好',
+      displayName: '朋友',
+      avatarText: '友',
       goals: [],
       streak: 0,
       loading: true
@@ -89,6 +92,8 @@ export default {
   },
   onShow() {
     this.setDate()
+    this.setGreeting()
+    this.setUserInfo()
     this.fetchGoals()
   },
   methods: {
@@ -96,6 +101,26 @@ export default {
       const d = new Date()
       const week = ['日', '一', '二', '三', '四', '五', '六']
       this.dateLabel = `${d.getMonth() + 1}月${d.getDate()}日 · 星期${week[d.getDay()]}`
+    },
+    setGreeting() {
+      const hour = new Date().getHours()
+      if (hour >= 5 && hour < 9) {
+        this.greeting = '早上好'
+      } else if (hour >= 9 && hour < 12) {
+        this.greeting = '上午好'
+      } else if (hour >= 12 && hour < 14) {
+        this.greeting = '中午好'
+      } else if (hour >= 14 && hour < 18) {
+        this.greeting = '下午好'
+      } else {
+        this.greeting = '晚上好'
+      }
+    },
+    setUserInfo() {
+      const user = uni.getStorageSync('eloUser')
+      const name = (user && user.nickname) || ''
+      this.displayName = name || '朋友'
+      this.avatarText = name ? name.charAt(0) : '友'
     },
     dateStr(d) {
       const p = n => String(n).padStart(2, '0')
