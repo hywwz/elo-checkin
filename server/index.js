@@ -9,6 +9,7 @@ import {
   findUserByToken,
   cleanupExpiredSessions
 } from './auth.js'
+import { handleGoalsRequest } from './goals.js'
 
 const PORT = Number(process.env.PORT || 3000)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -147,6 +148,15 @@ async function route(req, res) {
 
   if (path === '/v1/users/me' && req.method === 'GET') {
     return handleUsersMe(req, res, token)
+  }
+
+  const goalMatch = path.match(/^\/v1\/goals(?:\/([^/]+))?$/)
+  if (goalMatch) {
+    const user = findUserByToken(token)
+    if (!user) {
+      return send(res, 401, 10001, '登录已失效，请重新登录')
+    }
+    return handleGoalsRequest(req, res, user, goalMatch[1] || null)
   }
 
   return send(res, 404, 10404, '接口不存在')
