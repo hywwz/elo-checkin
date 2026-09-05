@@ -65,6 +65,8 @@
 </template>
 
 <script>
+import { post } from '../../utils/request.js'
+
 export default {
   data() {
     return {
@@ -101,17 +103,26 @@ export default {
       this.errors = errors
       return !errors.account && !errors.password
     },
-    login() {
+    async login() {
       if (this.loading) return
       if (!this.validate()) return
       this.loading = true
-      setTimeout(() => {
+      try {
+        const data = await post('/auth/login', {
+          account: this.account.trim(),
+          password: this.password
+        })
+        uni.setStorageSync('eloToken', data.token)
+        uni.setStorageSync('eloUser', data.user)
+        uni.setStorageSync('eloAccount', this.account.trim())
         this.loading = false
         uni.showToast({ title: '登录成功', icon: 'success' })
         setTimeout(() => {
           uni.reLaunch({ url: '/pages/checkin/checkin' })
         }, 800)
-      }, 1200)
+      } catch (err) {
+        this.loading = false
+      }
     }
   }
 }
