@@ -9,7 +9,7 @@
 
       <view class="rate-card">
         <view class="rate-head">
-          <text class="rate-label">{{ data.period }}</text>
+          <text class="rate-label">{{ data.periodLabel }}</text>
           <view class="delta" :class="{ down: data.delta.indexOf('-') > -1 }">
             <text class="arrow">{{ data.delta.indexOf('-') > -1 ? '↓' : '↑' }}</text>
             <text>{{ data.delta }}</text>
@@ -34,29 +34,29 @@
         <view class="mini">
           <text class="m-icon">✦</text>
           <view>
-            <text class="m-num">{{ data.totals }}</text>
-            <text class="m-label">{{ data.totalLabel }}</text>
+            <text class="m-num">{{ data.totals.value }}{{ data.totals.unit }}</text>
+            <text class="m-label">{{ data.totals.label }}</text>
           </view>
         </view>
         <view class="mini">
           <text class="m-icon streak">◈</text>
           <view>
-            <text class="m-num">{{ data.streak }}</text>
-            <text class="m-label">{{ data.streakLabel }}</text>
+            <text class="m-num">{{ data.streak.value }}{{ data.streak.unit }}</text>
+            <text class="m-label">{{ data.streak.label }}</text>
           </view>
         </view>
       </view>
 
       <view class="card">
         <view class="card-head">
-          <text class="card-title">{{ data.trendTitle }}</text>
-          <text class="card-note">{{ data.trendCaption }}</text>
+          <text class="card-title">{{ data.trend.title }}</text>
+          <text class="card-note">{{ data.trend.caption }}</text>
         </view>
         <view class="trend">
-          <view class="b-col" v-for="(v, i) in data.bars" :key="i">
-            <text class="b-val">{{ v }}</text>
-            <view class="b-bar" :style="{ height: Math.round((v / data.barMax) * 100) + '%' }"></view>
-            <text class="b-day">{{ data.labels[i] }}</text>
+          <view class="b-col" v-for="(item, i) in data.trend.items" :key="i">
+            <text class="b-val">{{ item.value }}</text>
+            <view class="b-bar" :style="{ height: Math.max(4, Math.round((item.value / data.trend.max) * 100)) + '%' }"></view>
+            <text class="b-day">{{ item.label }}</text>
           </view>
         </view>
       </view>
@@ -66,13 +66,13 @@
           <text class="card-title">目标完成</text>
           <text class="card-note">次数 / 目标</text>
         </view>
-        <view class="goal-row" v-for="g in data.goals" :key="g[0]">
+        <view class="goal-row" v-for="g in data.goals" :key="g.id || g.name">
           <view class="g-head">
-            <text class="g-name">{{ g[0] }}</text>
-            <text class="g-count"><text class="strong">{{ g[1] }}</text> / {{ g[2] }} 次</text>
+            <text class="g-name">{{ g.name }}</text>
+            <text class="g-count"><text class="strong">{{ g.completed }}</text> / {{ g.target }} 次</text>
           </view>
           <view class="track">
-            <view class="fill" :style="{ width: Math.round((g[1] / g[2]) * 100) + '%' }"></view>
+            <view class="fill" :style="{ width: g.target ? Math.round((g.completed / g.target) * 100) + '%' : '0%' }"></view>
           </view>
         </view>
       </view>
@@ -83,6 +83,8 @@
 </template>
 
 <script>
+import { get } from '../../utils/request.js'
+
 const DATA = {
   current: {
     period: '本月打卡率',
@@ -149,17 +151,45 @@ const DATA = {
   }
 }
 
+const EMPTY_STATS = {
+  periodLabel: '',
+  delta: '',
+  rate: 0,
+  title: '',
+  desc: '',
+  totals: { value: 0, unit: '天', label: '累计坚持' },
+  streak: { value: 0, unit: '天', label: '最长连续' },
+  trend: { title: '', caption: '', max: 1, items: [] },
+  goals: []
+}
+
 export default {
   data() {
     return {
       period: 'current',
-      data: DATA.current
+      data: EMPTY_STATS
     }
+  },
+  onLoad() {
+    this.fetchStats()
   },
   methods: {
     switchPeriod(key) {
       this.period = key
-      this.data = DATA[key]
+      this.fetchStats()
+    },
+    async fetchStats() {
+      try {
+        const periodMap = {
+          current: 'this_month',
+          last: 'last_month',
+          year: 'this_year'
+        }
+        const data = await get(`/statistics?period=${periodMap[this.period]}`)
+        this.data = data
+      } catch (err) {
+        // 请求层已提示
+      }
     }
   }
 }
