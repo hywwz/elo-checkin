@@ -112,26 +112,6 @@ function scheduleCount(goal, start, end) {
   return total
 }
 
-function scheduledDates(goals, start, end) {
-  const dates = new Set()
-  for (const goal of goals) {
-    const mode = goal.freq_mode
-    const created = dateString(new Date(goal.created_at))
-    const freqDays = goal.freq_days ? JSON.parse(goal.freq_days) : []
-    let cursor = created > start ? created : start
-    let i = 0
-    while (cursor <= end && i < 400) {
-      const wd = weekdayFromDate(cursor)
-      if (mode === 'daily' || mode === 'count' || freqDays.includes(wd)) {
-        dates.add(cursor)
-      }
-      cursor = addDays(cursor, 1)
-      i += 1
-    }
-  }
-  return [...dates].sort()
-}
-
 function longestStreak(dates) {
   if (!dates.length) return 0
   let best = 1
@@ -231,19 +211,20 @@ export async function handleStatistics(req, res, user) {
   const goals = db
     .prepare('SELECT * FROM goals WHERE user_id = ? ORDER BY created_at ASC')
     .all(user.id)
-  const doneDates = distinctDates(user.id, range.start, range.end)
-  const scheduled = scheduledDates(goals, range.start, range.end)
-  const done = doneDates.length
-  const rate = ratePercent(done, scheduled.length)
   const totalCheckins = countCheckins(user.id, range.start, range.end)
+  const scheduleTotal = goals.reduce(
+    (sum, g) => sum + scheduleCount(g, range.start, range.end),
+    0
+  )
+  const rate = ratePercent(totalCheckins, scheduleTotal)
 
   const allDates = distinctDates(user.id, '0000-01-01', '9999-12-31')
   const prev = previousRange(period, today)
   let deltaText = '暂无上期对比'
   if (prev) {
     const prevRate = ratePercent(
-      distinctDates(user.id, prev.start, prev.end).length,
-      scheduledDates(goals, prev.start, prev.end).length
+      countCheckins(user.id, prev.start, prev.end),
+      goals.reduce((sum, g) => sum + scheduleCount(g, prev.start, prev.end), 0)
     )
     const diff = rate - prevRate
     const prefix = diff >= 0 ? '较上期 +' : '较上期 -'
@@ -257,8 +238,8 @@ export async function handleStatistics(req, res, user) {
     periodLabel: `${range.short}打卡率`,
     delta: deltaText,
     rate,
-    title: `${range.short}已打卡 ${done} 天`,
-    desc: `累计完成 ${totalCheckins} 次 · 目标 ${scheduled.length} 次`,
+    title: `${range.short}完成 ${totalCheckins} 次`,
+    desc: `目标 ${scheduleTotal} 次 · 还差 ${Math.max(0, scheduleTotal - totalCheckins)} 次`,
     totals: {
       value: allDates.length,
       unit: '天',
