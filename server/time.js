@@ -1,9 +1,12 @@
-function pad(n) {
-  return String(n).padStart(2, '0')
-}
-
 export function dateString(d = new Date()) {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(d)
+  const pick = type => parts.find(p => p.type === type).value
+  return `${pick('year')}-${pick('month')}-${pick('day')}`
 }
 
 export function weekdayFromDate(date) {

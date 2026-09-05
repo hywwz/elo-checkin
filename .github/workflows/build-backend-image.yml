@@ -38,4 +38,6 @@ jobs:
         with:
           context: server
           push: true
-          tags: ghcr.io/${{ steps.meta.outputs.owner }}/elo-backend:latest
+          tags: |
+            ghcr.io/${{ steps.meta.outputs.owner }}/elo-backend:latest
+            ghcr.io/${{ steps.meta.outputs.owner }}/elo-backend:${{ github.sha }}
