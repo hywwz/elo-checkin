@@ -76,6 +76,8 @@
 </template>
 
 <script>
+import { get, put } from '../../utils/request.js'
+
 export default {
   data() {
     return {
@@ -108,19 +110,25 @@ export default {
       return `${this.pad(this.tpHour)}:${this.pad(this.tpMin)}`
     }
   },
-  onLoad(options) {
+  async onLoad(options) {
     this.goalId = (options && options.id) || ''
-    this.prefill()
+    if (this.goalId) {
+      await this.fetchGoal()
+    }
   },
   methods: {
-    loadList() {
-      const stored = uni.getStorageSync('eloCheckinGoals')
-      return Array.isArray(stored) ? stored : []
+    async fetchGoal() {
+      try {
+        const data = await get(`/goals/${this.goalId}`)
+        const target = data.goal
+        if (target) {
+          this.fillGoal(target)
+        }
+      } catch (err) {
+        // 请求层已提示
+      }
     },
-    prefill() {
-      const list = this.loadList()
-      const target =
-        list.find(g => String(g.id) === String(this.goalId)) || list[0] || null
+    fillGoal(target) {
       if (target) {
         this.goalId = target.id
         this.goal = target.name || ''
@@ -138,7 +146,7 @@ export default {
         } else {
           this.freqMode = 'daily'
         }
-        const [h, m] = (target.time || '21:30').split(':').map(Number)
+        const [h, m] = (target.reminderTime || '21:30').split(':').map(Number)
         this.tpHour = Number.isInteger(h) ? h : 21
         this.tpMin = Number.isInteger(m) ? m : 30
       }
@@ -171,16 +179,12 @@ export default {
       }
       return !errors.goal && !errors.task && !this.errors.freq
     },
-    save() {
+    async save() {
       if (this.loading) return
       if (!this.validate()) return
       this.loading = true
-      setTimeout(() => {
-        const list = this.loadList()
-        if (!this.goalId) this.goalId = `goal_${Date.now()}`
-        const idx = list.findIndex(g => String(g.id) === String(this.goalId))
-        const updated = {
-          id: this.goalId,
+      try {
+        await put(`/goals/${this.goalId}`, {
           name: this.goal.trim(),
           task: this.task.trim(),
           freq:
@@ -189,17 +193,16 @@ export default {
               : this.freqMode === 'count'
                 ? { mode: 'count', count: this.weeklyCount }
                 : { mode: 'days', days: [...this.fixedDays].sort((a, b) => a - b) },
-          time: this.timeText
-        }
-        if (idx > -1) list.splice(idx, 1, updated)
-        else list.push(updated)
-        uni.setStorageSync('eloCheckinGoals', list)
+          reminderTime: this.timeText
+        })
         this.loading = false
         uni.showToast({ title: '修改已生效', icon: 'success' })
         setTimeout(() => {
           uni.reLaunch({ url: '/pages/checkin/checkin' })
         }, 800)
-      }, 1200)
+      } catch (err) {
+        this.loading = false
+      }
     }
   }
 }

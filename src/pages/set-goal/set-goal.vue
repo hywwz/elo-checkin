@@ -77,6 +77,8 @@
 </template>
 
 <script>
+import { post } from '../../utils/request.js'
+
 export default {
   data() {
     return {
@@ -132,10 +134,6 @@ export default {
       if (i > -1) this.fixedDays.splice(i, 1)
       else this.fixedDays.push(value)
     },
-    loadList() {
-      const stored = uni.getStorageSync('eloCheckinGoals')
-      return Array.isArray(stored) ? stored : []
-    },
     validate() {
       const errors = {}
       if (!this.goal.trim()) errors.goal = '请填写目标名称'
@@ -146,32 +144,31 @@ export default {
       }
       return !this.errors.goal && !this.errors.task && !this.errors.freq
     },
-    save() {
+    async save() {
       if (this.loading) return
       if (!this.validate()) return
       this.loading = true
-      setTimeout(() => {
-        const list = this.loadList()
-        const freq =
-          this.freqMode === 'daily'
-            ? { mode: 'daily' }
-            : this.freqMode === 'count'
-              ? { mode: 'count', count: this.weeklyCount }
-              : { mode: 'days', days: [...this.fixedDays].sort((a, b) => a - b) }
-        list.push({
-          id: `goal_${Date.now()}`,
+      const freq =
+        this.freqMode === 'daily'
+          ? { mode: 'daily' }
+          : this.freqMode === 'count'
+            ? { mode: 'count', count: this.weeklyCount }
+            : { mode: 'days', days: [...this.fixedDays].sort((a, b) => a - b) }
+      try {
+        await post('/goals', {
           name: this.goal.trim(),
           task: this.task.trim(),
           freq,
-          time: this.timeText
+          reminderTime: this.timeText
         })
-        uni.setStorageSync('eloCheckinGoals', list)
         this.loading = false
-        uni.showToast({ title: '已保存，返回打卡', icon: 'success' })
+        uni.showToast({ title: '目标已保存', icon: 'success' })
         setTimeout(() => {
           uni.reLaunch({ url: '/pages/checkin/checkin' })
         }, 800)
-      }, 1200)
+      } catch (err) {
+        this.loading = false
+      }
     }
   }
 }

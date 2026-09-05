@@ -68,43 +68,27 @@
 </template>
 
 <script>
-const DEFAULT_GOALS = [
-  {
-    id: 'goal_learning',
-    name: '学习',
-    task: '背 20 个单词',
-    freq: { daily: true, days: 1 },
-    time: '21:30'
-  }
-]
+import { get, post, del } from '../../utils/request.js'
+
 export default {
   data() {
     return {
       dateLabel: '',
       goals: [],
-      doneIds: [],
-      log: []
+      loading: true
     }
   },
   computed: {
     doneNum() {
-      return this.doneIds.filter(id => this.visibleGoals.some(g => g.id === id)).length
+      return this.visibleGoals.filter(g => g.doneToday).length
     },
     visibleGoals() {
-      const code = ((new Date().getDay() + 6) % 7) + 1
-      return this.goals.filter(g => {
-        const f = g.freq || { mode: 'daily' }
-        return !(f.mode === 'days' && !f.days.includes(code))
-      })
+      return this.goals.filter(g => g.visibleOnDate)
     }
   },
-  onLoad() {
-    this.setDate()
-  },
   onShow() {
-    this.loadGoals()
-    this.loadDone()
-    this.loadLog()
+    this.setDate()
+    this.fetchGoals()
   },
   methods: {
     setDate() {
@@ -112,103 +96,55 @@ export default {
       const week = ['日', '一', '二', '三', '四', '五', '六']
       this.dateLabel = `${d.getMonth() + 1}月${d.getDate()}日 · 星期${week[d.getDay()]}`
     },
-    todayKey() {
-      const d = new Date()
-      return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
-    },
     dateStr(d) {
       const p = n => String(n).padStart(2, '0')
       return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
     },
-    inThisWeek(s) {
-      const [y, m, d] = s.split('-').map(Number)
-      const date = new Date(y, m - 1, d)
-      const now = new Date()
-      const offset = (now.getDay() + 6) % 7
-      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset)
-      const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6)
-      return date >= start && date <= end
-    },
-    loadLog() {
-      try {
-        const saved = uni.getStorageSync('eloCheckinLog')
-        this.log = Array.isArray(saved) ? saved : []
-      } catch (e) {
-        this.log = []
-      }
-    },
-    saveLog() {
-      uni.setStorageSync('eloCheckinLog', this.log)
-    },
-    loadGoals() {
-      const stored = uni.getStorageSync('eloCheckinGoals')
-      const list = Array.isArray(stored) && stored.length ? stored : DEFAULT_GOALS.map(g => JSON.parse(JSON.stringify(g)))
-      const normFreq = f => {
-        if (!f) return { mode: 'daily' }
-        if (f.mode) {
-          if (f.mode === 'count') return { mode: 'count', count: Number(f.count) || 3 }
-          if (f.mode === 'days') {
-            const days = Array.isArray(f.days) ? [...new Set(f.days)].filter(n => n >= 1 && n <= 7) : []
-            return { mode: 'days', days: days.sort((a, b) => a - b) }
-          }
-          return { mode: 'daily' }
-        }
-        if (f.daily === false) return { mode: 'count', count: Number(f.days) || 3 }
-        return { mode: 'daily' }
-      }
-      this.goals = list.map((g, i) => ({
-        id: g.id || `goal_${i}_${Date.now()}`,
-        name: g.name || '未命名目标',
-        task: g.task || '',
-        freq: normFreq(g.freq),
-        time: g.time || '21:30'
-      }))
-      uni.setStorageSync('eloCheckinGoals', this.goals)
-    },
-    loadDone() {
-      try {
-        const saved = uni.getStorageSync('eloCheckinDone')
-        if (saved && saved.date === this.todayKey() && Array.isArray(saved.ids)) {
-          this.doneIds = saved.ids.filter(id => this.goals.some(g => g.id === id))
-        } else {
-          this.doneIds = []
-        }
-      } catch (e) {
-        this.doneIds = []
-      }
-    },
-    saveDone() {
-      uni.setStorageSync('eloCheckinDone', { date: this.todayKey(), ids: this.doneIds })
-    },
     isDone(id) {
-      return this.doneIds.indexOf(id) > -1
+      const g = this.goals.find(x => x.id === id)
+      return Boolean(g && g.doneToday)
     },
     goalMeta(g) {
       const f = g.freq || { mode: 'daily' }
       if (f.mode === 'count') {
-        const done = this.log.filter(e => e.id === g.id && this.inThisWeek(e.date)).length
-        return `每周 ${f.count} 次 · 本周已完成 ${done}/${f.count} · ${g.time} 提醒`
+        return `每周 ${f.count} 次 · 本周已完成 ${g.weeklyDone || 0}/${f.count} · ${g.reminderTime} 提醒`
       }
       if (f.mode === 'days') {
         const names = ['一', '二', '三', '四', '五', '六', '日']
         const text = f.days.map(n => names[n - 1]).join('、')
-        return `每周${text} · ${g.time} 提醒`
+        return `每周${text} · ${g.reminderTime} 提醒`
       }
-      return `每天 1 次 · ${g.time} 提醒`
+      return `每天 1 次 · ${g.reminderTime} 提醒`
     },
-    toggle(id) {
-      if (this.isDone(id)) {
-        this.doneIds = this.doneIds.filter(x => x !== id)
-        this.log = this.log.filter(e => !(e.id === id && e.date === this.dateStr(new Date())))
-      } else {
-        this.doneIds.push(id)
-        this.log.push({ id, date: this.dateStr(new Date()) })
-        if (this.doneIds.length === this.visibleGoals.length) {
-          uni.showToast({ title: '今日目标全部完成', icon: 'success' })
-        }
+    async fetchGoals() {
+      this.loading = true
+      try {
+        const date = this.dateStr(new Date())
+        const data = await get(`/goals?date=${date}`)
+        this.goals = data.goals || []
+      } catch (err) {
+        // 请求层已提示
+      } finally {
+        this.loading = false
       }
-      this.saveDone()
-      this.saveLog()
+    },
+    async toggle(id) {
+      try {
+        if (this.isDone(id)) {
+          await del('/checkins/today', { goalId: id })
+          uni.showToast({ title: '已取消今日打卡', icon: 'none' })
+        } else {
+          await post('/checkins', { goalId: id })
+          if (this.doneNum + 1 === this.visibleGoals.length) {
+            uni.showToast({ title: '今日目标全部完成', icon: 'success' })
+          } else {
+            uni.showToast({ title: '打卡成功', icon: 'success' })
+          }
+        }
+        this.fetchGoals()
+      } catch (err) {
+        // 请求层已提示
+      }
     },
     goStats() {
       uni.navigateTo({ url: '/pages/statistics/statistics' })
