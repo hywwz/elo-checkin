@@ -11,6 +11,7 @@ import {
 } from './auth.js'
 import { handleGoalsRequest } from './goals.js'
 import { handleCheckinsRequest, handleWeekProgress } from './checkins.js'
+import { handleStatistics } from './statistics.js'
 
 const PORT = Number(process.env.PORT || 3000)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -179,6 +180,14 @@ async function route(req, res) {
       return send(res, 401, 10001, '登录已失效，请重新登录')
     }
     return handleCheckinsRequest(req, res, user, checkinMatch[1] || null)
+  }
+
+  if (path === '/v1/statistics' && req.method === 'GET') {
+    const user = findUserByToken(token)
+    if (!user) {
+      return send(res, 401, 10001, '登录已失效，请重新登录')
+    }
+    return handleStatistics(req, res, user)
   }
 
   return send(res, 404, 10404, '接口不存在')
