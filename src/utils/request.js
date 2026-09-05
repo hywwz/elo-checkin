@@ -1,7 +1,6 @@
-// 后端接口基础地址
-// H5/微信开发者工具：本机运行后端可用 localhost
-// 真机调试时请改成电脑局域网地址，例如 http://192.168.x.x:3000/v1
-const BASE_URL = 'http://localhost:3000/v1'
+import { API_BASE_URL } from './api-config.js'
+
+const BASE_URL = API_BASE_URL
 
 function showError(message) {
   uni.showToast({
