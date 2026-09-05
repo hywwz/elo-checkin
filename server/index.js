@@ -10,6 +10,7 @@ import {
   cleanupExpiredSessions
 } from './auth.js'
 import { handleGoalsRequest } from './goals.js'
+import { handleCheckinsRequest, handleWeekProgress } from './checkins.js'
 
 const PORT = Number(process.env.PORT || 3000)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -157,6 +158,27 @@ async function route(req, res) {
       return send(res, 401, 10001, '登录已失效，请重新登录')
     }
     return handleGoalsRequest(req, res, user, goalMatch[1] || null)
+  }
+
+  const weekMatch = path.match(/^\/v1\/goals\/([^/]+)\/week-progress$/)
+  if (weekMatch) {
+    const user = findUserByToken(token)
+    if (!user) {
+      return send(res, 401, 10001, '登录已失效，请重新登录')
+    }
+    if (req.method !== 'GET') {
+      return send(res, 405, 10004, '请求方法不支持')
+    }
+    return handleWeekProgress(req, res, user, weekMatch[1])
+  }
+
+  const checkinMatch = path.match(/^\/v1\/checkins(?:\/(today))?$/)
+  if (checkinMatch) {
+    const user = findUserByToken(token)
+    if (!user) {
+      return send(res, 401, 10001, '登录已失效，请重新登录')
+    }
+    return handleCheckinsRequest(req, res, user, checkinMatch[1] || null)
   }
 
   return send(res, 404, 10404, '接口不存在')
