@@ -43,6 +43,7 @@
 - 文档补全：`backend-api.md` 登记 `/v1/app/update`；记录 box-sizing 输入框宽度坑
 - 根目录过程稿（原型 HTML / 图标对比图）归档到 `archive/`，主目录保持清爽
 - 发布约定：标签发布后不移动，后续改动用新版本号推进
+- 新增新手文档：部署全流程解析 `DEPLOY-GUIDE.md`、模板框架提炼 `TEMPLATE-GUIDE.md`
 
 ---
 
@@ -65,7 +66,8 @@ src/
 │  └─ statistics/  统计（本月/上月/今年）
 ├─ utils/
 │  ├─ request.js   统一请求封装
-│  └─ api-config.js  接口地址配置（当前指向 Sealos）
+│  ├─ api-config.js  接口地址配置（当前指向 Sealos）
+│  └─ app-update.js  App 版本常量与更新检查逻辑
 ├─ static/         静态资源（含 App 图标 `app-icon-*.png`）
 ├─ pages.json      页面路由
 ├─ manifest.json   多端配置
@@ -84,6 +86,15 @@ src/
 项目根目录保留了最早设计沟通用的高保真 HTML 原型：
 `archive/login-prototype.html`、`register-prototype.html`、`checkin-prototype.html`、
 `set-goal-prototype.html`、`edit-goal-prototype.html`、`statistics-prototype.html`
+
+### 3.4 配套文档
+
+| 文档 | 面向谁 | 内容 |
+| --- | --- | --- |
+| [DEPLOY-GUIDE.md](DEPLOY-GUIDE.md) | 完全新手 | 从装软件到小程序/App/后端上线的每一步解析 |
+| [TEMPLATE-GUIDE.md](TEMPLATE-GUIDE.md) | 想复用代码的人 | 前后端框架拆解、加功能路径、迁移新项目清单 |
+| [backend-api.md](backend-api.md) | 前端/接口对接 | 全部接口字段与示例 |
+| [README.md](README.md) | 所有人 | 项目介绍与快速入口 |
 
 ---
 

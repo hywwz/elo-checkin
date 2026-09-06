@@ -10,6 +10,15 @@
 
 ---
 
+## 文档导航（新手从这里开始）
+
+- [部署全流程解析（从零到上线，小白版）](DEPLOY-GUIDE.md)
+- [模板框架提炼（代码结构拆解，改功能指南）](TEMPLATE-GUIDE.md)
+- [项目笔记与发布复盘](PROJECT.md)
+- [后端接口文档](backend-api.md)
+
+---
+
 ## 功能特性
 
 - 账号注册 / 登录，支持邮箱或手机号格式账号
@@ -48,6 +57,8 @@
 │   ├── statistics.js            # 统计
 │   ├── db.js                    # SQLite 初始化
 │   └── Dockerfile
+├── DEPLOY-GUIDE.md              # 部署全流程解析（小白版）
+├── TEMPLATE-GUIDE.md            # 模板框架提炼
 ├── PROJECT.md                   # 项目笔记与流程复盘
 ├── backend-api.md               # 接口文档
 └── archive/                     # 历史原型与设计过程稿（不再参与构建）
