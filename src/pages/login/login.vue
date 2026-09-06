@@ -271,6 +271,7 @@ export default {
   margin-left: 4rpx;
 }
 .field {
+  box-sizing: border-box;
   width: 100%;
   height: 104rpx;
   padding: 0 28rpx;
@@ -292,6 +293,7 @@ export default {
   display: flex;
   align-items: center;
   position: relative;
+  box-sizing: border-box;
   width: 100%;
   height: 104rpx;
   background: #fff;
@@ -301,6 +303,7 @@ export default {
 .pwd-wrap .field {
   flex: 1;
   min-width: 0;
+  box-sizing: border-box;
   border: 0;
   background: transparent;
   height: 100rpx;
