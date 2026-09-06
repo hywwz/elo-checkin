@@ -49,7 +49,8 @@
 │   ├── db.js                    # SQLite 初始化
 │   └── Dockerfile
 ├── PROJECT.md                   # 项目笔记与流程复盘
-└── backend-api.md               # 接口文档
+├── backend-api.md               # 接口文档
+└── archive/                     # 历史原型与设计过程稿（不再参与构建）
 ```
 
 ---

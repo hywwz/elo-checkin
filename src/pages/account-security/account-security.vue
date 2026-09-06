@@ -67,6 +67,14 @@
         <text>{{ loading ? '正在保存…' : '保存新密码' }}</text>
       </view>
 
+      <view class="update-card" @click="checkUpdate">
+        <view class="update-copy">
+          <text class="update-title">检查更新</text>
+          <text class="update-sub">当前版本 v{{ appVersion }}</text>
+        </view>
+        <text class="update-arrow">›</text>
+      </view>
+
       <view class="logout-card" @click="logout">
         <text>退出登录</text>
       </view>
@@ -76,10 +84,16 @@
 
 <script>
 import { get, post } from '../../utils/request.js'
+import {
+  APP_VERSION,
+  checkForAppUpdate,
+  forceCheckForAppUpdate
+} from '../../utils/app-update.js'
 
 export default {
   data() {
     return {
+      appVersion: APP_VERSION,
       account: '',
       nickname: '朋友',
       avatarText: '友',
@@ -101,8 +115,12 @@ export default {
   onShow() {
     this.setUserInfo()
     this.refreshUser()
+    checkForAppUpdate()
   },
   methods: {
+    checkUpdate() {
+      forceCheckForAppUpdate()
+    },
     setUserInfo() {
       const user = uni.getStorageSync('eloUser')
       const name = (user && user.nickname) || ''
@@ -386,5 +404,36 @@ export default {
   font-size: 25rpx;
   font-weight: 800;
   letter-spacing: 2rpx;
+}
+.update-card {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+  padding: 26rpx 28rpx;
+  background: #fff;
+  border: 2rpx solid #E2EFE7;
+  border-radius: 34rpx;
+  box-shadow: 0 18rpx 36rpx -32rpx rgba(20, 65, 46, 0.7);
+}
+.update-copy {
+  flex: 1;
+  min-width: 0;
+}
+.update-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #243042;
+}
+.update-sub {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 19rpx;
+  color: #9AA6BA;
+}
+.update-arrow {
+  font-size: 36rpx;
+  color: #C0CADA;
+  font-weight: 700;
 }
 </style>

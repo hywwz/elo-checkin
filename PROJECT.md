@@ -16,11 +16,11 @@
 
 | 项目 | 状态 | 地址/说明 |
 | --- | --- | --- |
-| GitHub 仓库 | ✅ v1.0.1 代码已推送 | https://github.com/hywwz/elo-checkin（master / 标签 v1.0.1 = `5de1470`） |
-| 后端（Sealos） | ✅ 运行中（v1.0.1 镜像） | https://cywspqlnlffd.cloud.sealos.io |
+| GitHub 仓库 | ✅ v1.0.1 已发布；master 继续开发（将作为 v1.0.2） | https://github.com/hywwz/elo-checkin |
+| 后端（Sealos） | ✅ 运行中（v1.0.1 镜像；含更新检查的镜像待拉取） | https://cywspqlnlffd.cloud.sealos.io |
 | 微信小程序 | ✅ 体验版 1.0.1 | 已添加体验成员 |
 | Android App | ⏳ 新资源（图标+更新检查）已编译就绪，等云打包 | DCloud 免费打包机 2026-09-06 已满额，次日重试；旧包 `dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk` |
-| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.1：账号与安全 / 管理员 / 记住密码 / 正式图标 / App 内更新检查） |
+| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.2 开发中：更新检查优化 / 手动检查入口 / 版本统一 / 文档归档） |
 | 接口文档 | ✅ | [backend-api.md](backend-api.md) |
 
 ---
@@ -35,6 +35,14 @@
 - 后端新增 `/auth/change-password`、`/auth/logout` 与管理员接口
 - App 正式图标：采用 E + 打勾 设计稿（源图 a5ea，1024×1024），生成 Android 各分辨率图标并写入 manifest
 - App 内更新检查：后端 `GET /app/update` 返回最新版本与下载地址，App 启动时自动检测新版并引导下载
+
+### v1.0.2（开发中）变更摘要
+
+- 更新检查提前到登录页启动触发，未登录也能收到新版提示；“账号与安全”页新增“检查更新”手动入口
+- 版本号统一管理：前端版本常量收口到 `src/utils/app-update.js`，与 `manifest.json`、`server/app-update.js` 同步维护
+- 文档补全：`backend-api.md` 登记 `/v1/app/update`；记录 box-sizing 输入框宽度坑
+- 根目录过程稿（原型 HTML / 图标对比图）归档到 `archive/`，主目录保持清爽
+- 发布约定：标签发布后不移动，后续改动用新版本号推进
 
 ---
 
@@ -74,7 +82,7 @@ src/
 ### 3.3 交付物原型
 
 项目根目录保留了最早设计沟通用的高保真 HTML 原型：
-`login-prototype.html`、`register-prototype.html`、`checkin-prototype.html`、
+`archive/login-prototype.html`、`register-prototype.html`、`checkin-prototype.html`、
 `set-goal-prototype.html`、`edit-goal-prototype.html`、`statistics-prototype.html`
 
 ---
@@ -229,7 +237,7 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
 | xxhdpi | 144×144 | `xxhdpi` | `src/static/app-icon-144.png` |
 | xxxhdpi | 192×192 | `xxxhdpi` | `src/static/app-icon-192.png` |
 
-注意：只重新 `npx uni build -p app` 不会自动换图标，必须先在 `src/manifest.json` 中写入 `icons` 配置再编译，HBuilderX 云打包才会使用新图。源码目录中还保留了历史过程稿 `app-icon.png`（E 字版）、`app-icon-check.png`（打勾版）、`app-icon-echeck.png`（E + 勾预览版）与根目录 `app-icon-preview.png` 对比图，均未删除。
+注意：只重新 `npx uni build -p app` 不会自动换图标，必须先在 `src/manifest.json` 中写入 `icons` 配置再编译，HBuilderX 云打包才会使用新图。源码目录中还保留了历史过程稿 `app-icon.png`（E 字版）、`app-icon-check.png`（打勾版）、`app-icon-echeck.png`（E + 勾预览版）与 `archive/app-icon-preview.png` 对比图，均未删除。
 
 正式图标预览（源图保存在仓库 `src/static/` 下）：
 
@@ -316,9 +324,13 @@ https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/xxx.apk
 | `v0.2.0` | `0a3ddc3` | 前后端联调 | 注册 / 登录 / 目标 / 打卡 / 统计全链路接通真实后端 |
 | `v0.2.1` | `fbe5dd0` | 发版前清理 | 删除前端 Mock 假数据，后端接口地址统一配置 |
 | `v1.0.0` | `2062c0e` | 首发 | 微信小程序体验版 + Sealos 后端 + Android APK |
-| `v1.0.1` | `5de1470`（跟随 master） | 当前迭代 | 记住密码 / 账号与安全 / 管理员 / 正式图标 / 更新检查 / 文档 |
+| `v1.0.1` | `5de1470`（已发布，标签固定） | 1.0.1 发布版 | 记住密码 / 账号与安全 / 管理员 / 正式图标 / 更新检查（初版） / 文档 |
+| （master） | 最新提交 | v1.0.2 开发中 | 更新检查优化 / 手动检查入口 / 版本统一 / 文档归档 |
 
-约定：v0.x 是过程存档点，v1.x 才是对外版本；发布后若补文档等小改动，`v1.0.1` 会随 master 移动到最新提交，保证“打这个标签 = 拿到当前完整代码”。
+约定：
+- v0.x 是过程存档点，v1.x 才是对外版本；
+- 标签一旦作为发布版本打上后**不移动**；发布后若继续改代码，使用新版本号（如 `v1.0.2`）推进，避免改写历史；
+- 本地小步存档可直接 commit 到 master，无需每次打标签。
 
 ---
 

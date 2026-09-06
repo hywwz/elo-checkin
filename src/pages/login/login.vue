@@ -73,6 +73,7 @@
 <script>
 import CryptoJS from 'crypto-js'
 import { post } from '../../utils/request.js'
+import { checkForAppUpdate } from '../../utils/app-update.js'
 
 // 仅用于本地“记住密码”的对称加密密钥（防明文拖库，不用于服务端校验）
 const SAVED_PASSWORD_KEY = 'eloSavedPassword'
@@ -121,6 +122,8 @@ export default {
         }
       }
     }
+    // App 端启动即检查更新（登录页也可收到提示）
+    checkForAppUpdate()
   },
   methods: {
     tip(text) {

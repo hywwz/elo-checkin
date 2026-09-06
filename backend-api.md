@@ -1,9 +1,9 @@
 # elo 打卡小程序 · 后端接口文档
 
 > 版本：v1  
-> 日期：2026-09-05  
-> 适用前端：uni-app + Vue3 微信小程序（页面目录 `src/pages`）  
-> 当前前端仍使用本地 mock 数据，本文档定义接入真实后端后需要提供的接口。
+> 日期：2026-09-06  
+> 适用前端：uni-app + Vue3（微信小程序 / Android App / H5）  
+> 生产地址：https://cywspqlnlffd.cloud.sealos.io/v1
 
 ---
 
@@ -604,20 +604,72 @@ Authorization: Bearer <token>
 
 ---
 
-## 7. 前端页面与接口对应表
+## 7. 公共接口（无需登录）
 
-| 页面 | 主要接口 | 页面本地当前行为 |
-| --- | --- | --- |
-| 登录页 | `POST /auth/login`、`GET /users/me` | 当前为预填模拟登录 |
-| 注册页 | `POST /auth/register` | 当前仅校验后返回登录页 |
-| 打卡主页 | `GET /goals`、`GET /checkins`、`POST /checkins`、`DELETE /checkins/today` | 本地存储目标与打卡记录 |
-| 设置目标页 | `POST /goals` | 本地追加保存 |
-| 修改目标页 | `GET /goals/{id}`、`PUT /goals/{id}` | 本地替换保存 |
-| 统计页 | `GET /statistics?period=...` | 当前为静态演示数据 |
+### 7.1 健康检查
+
+`GET /health`
+
+成功响应：
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "service": "elo-backend",
+    "time": "2026-09-06T20:00:00+08:00"
+  }
+}
+```
+
+### 7.2 App 更新检查
+
+`GET /app/update`
+
+用途：App 启动/进入登录页时自动调用，或用户在“账号与安全”页手动点击“检查更新”。无需登录。
+
+成功响应：
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "latestVersion": "1.0.1",
+    "downloadUrl": "https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/elo-1.0.2.apk",
+    "releaseNotes": "修复登录页输入框宽度；新增更新检查"
+  }
+}
+```
+
+字段说明：
+
+| 字段 | 说明 |
+| --- | --- |
+| `latestVersion` | 服务器当前最新版本号（不带 `v` 前缀）；App 端比较后高于本机版本才提示 |
+| `downloadUrl` | APK 下载地址；为空时 App 提示“新版本即将发布” |
+| `releaseNotes` | 更新说明，展示在弹窗内容中 |
+
+配置位置：`server/app-update.js`。发布新版本时同步修改 `src/manifest.json` 的 `versionName` 与前端 `src/utils/app-update.js` 中的 `APP_VERSION`。
 
 ---
 
-## 8. 后端建议
+## 8. 前端页面与接口对应表
+
+| 页面 | 主要接口 | 页面本地当前行为 |
+| --- | --- | --- |
+| 登录页 | `POST /auth/login`、`GET /app/update` | 真实登录；App 端启动检查更新 |
+| 注册页 | `POST /auth/register` | 当前仅校验后返回登录页 |
+| 打卡主页 | `GET /goals`、`POST /checkins`、`DELETE /checkins/today` | 真实接口 |
+| 设置目标页 | `POST /goals` | 真实接口 |
+| 修改目标页 | `GET /goals/{id}`、`PUT /goals/{id}` | 真实接口 |
+| 统计页 | `GET /statistics?period=...` | 真实接口 |
+| 账号与安全页 | `POST /auth/logout`、`POST /auth/change-password`、`GET /app/update` | 真实接口；含“检查更新”入口 |
+
+---
+
+## 9. 后端建议
 
 1. 数据库表建议：`users`、`goals`、`checkins` 三张表即可支撑当前全部需求。
 2. 唯一约束：
