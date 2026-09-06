@@ -75,8 +75,26 @@ import CryptoJS from 'crypto-js'
 import { post } from '../../utils/request.js'
 
 // 仅用于本地“记住密码”的对称加密密钥（防明文拖库，不用于服务端校验）
-const REMEMBER_SECRET = 'elo-checkin-local-remember-v1'
 const SAVED_PASSWORD_KEY = 'eloSavedPassword'
+const REMEMBER_KEY = CryptoJS.enc.Utf8.parse('0123456789abcdef0123456789abcdef')
+const REMEMBER_IV = CryptoJS.enc.Utf8.parse('0123456789abcdef')
+
+function encryptPassword(text) {
+  return CryptoJS.AES.encrypt(text, REMEMBER_KEY, {
+    iv: REMEMBER_IV,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  }).toString()
+}
+
+function decryptPassword(encrypted) {
+  const bytes = CryptoJS.AES.decrypt(encrypted, REMEMBER_KEY, {
+    iv: REMEMBER_IV,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  })
+  return bytes.toString(CryptoJS.enc.Utf8)
+}
 
 export default {
   data() {
@@ -97,8 +115,7 @@ export default {
       const encrypted = uni.getStorageSync(SAVED_PASSWORD_KEY)
       if (encrypted) {
         try {
-          const bytes = CryptoJS.AES.decrypt(encrypted, REMEMBER_SECRET)
-          this.password = bytes.toString(CryptoJS.enc.Utf8)
+          this.password = decryptPassword(encrypted)
         } catch (err) {
           this.password = ''
         }
@@ -112,7 +129,7 @@ export default {
     contactAdmin() {
       uni.showModal({
         title: '忘记密码',
-        content: '当前为体验版，暂不支持自助找回。请联系管理员「陈晨」协助重置密码。',
+        content: '当前为体验版，暂不支持自助找回。请联系项目管理员协助重置密码。',
         showCancel: false,
         confirmText: '知道了'
       })
@@ -164,7 +181,7 @@ export default {
           uni.setStorageSync('eloRememberPwd', true)
           uni.setStorageSync(
             SAVED_PASSWORD_KEY,
-            CryptoJS.AES.encrypt(this.password, REMEMBER_SECRET).toString()
+            encryptPassword(this.password)
           )
         } else {
           uni.setStorageSync('eloRememberPwd', false)
