@@ -256,6 +256,7 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
    - src/manifest.json：versionName / versionCode 同步升级
 4. GitHub Actions 自动重建后端镜像 → Sealos 对 elo-backend 执行“变更 → 保存”
 5. 旧版 App 用户打开后自动收到更新提示 → 点击下载安装
+6. 把 master 移动到新版提交后，同步 PROJECT.md“当前状态”与 7.6 表格里的标签哈希
 ```
 
 Release 附件下载地址形如：
