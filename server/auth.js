@@ -2,6 +2,10 @@ import crypto from 'node:crypto'
 import { db, nowIso } from './db.js'
 
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000
+const ADMIN_ACCOUNTS = String(process.env.ADMIN_ACCOUNTS || 'design@elo.cn')
+  .split(',')
+  .map(s => s.trim().toLowerCase())
+  .filter(Boolean)
 
 export function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex')
@@ -52,6 +56,10 @@ export function changePassword(userId, oldPassword, newPassword) {
 
 export function revokeSession(token) {
   db.prepare('DELETE FROM sessions WHERE token = ?').run(token)
+}
+
+export function isAdminAccount(account) {
+  return ADMIN_ACCOUNTS.includes(String(account || '').trim().toLowerCase())
 }
 
 export function createSession(userId) {

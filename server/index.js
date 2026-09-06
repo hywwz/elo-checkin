@@ -9,8 +9,14 @@ import {
   revokeSession,
   publicUser,
   findUserByToken,
-  cleanupExpiredSessions
+  cleanupExpiredSessions,
+  isAdminAccount
 } from './auth.js'
+import {
+  handleAdminUsers,
+  handleAdminUserRecords,
+  handleAdminResetPassword
+} from './admin.js'
 import { handleGoalsRequest } from './goals.js'
 import { handleCheckinsRequest, handleWeekProgress } from './checkins.js'
 import { handleStatistics } from './statistics.js'
@@ -115,7 +121,7 @@ async function handleAuthLogin(req, res) {
   const token = createSession(user.id)
   return send(res, 200, 0, '登录成功', {
     token,
-    user: publicUser(user)
+    user: { ...publicUser(user), isAdmin: isAdminAccount(user.account) }
   })
 }
 
@@ -152,7 +158,9 @@ async function handleUsersMe(req, res, token) {
   if (!user) {
     return send(res, 401, 10001, '登录已失效，请重新登录')
   }
-  return send(res, 200, 0, 'success', { user: publicUser(user) })
+  return send(res, 200, 0, 'success', {
+    user: { ...publicUser(user), isAdmin: isAdminAccount(user.account) }
+  })
 }
 
 async function route(req, res) {
@@ -197,6 +205,37 @@ async function route(req, res) {
 
   if (path === '/v1/users/me' && req.method === 'GET') {
     return handleUsersMe(req, res, token)
+  }
+
+  if (path === '/v1/admin/users' && req.method === 'GET') {
+    const user = findUserByToken(token)
+    if (!user) {
+      return send(res, 401, 10001, '登录已失效，请重新登录')
+    }
+    if (!isAdminAccount(user.account)) {
+      return send(res, 403, 10001, '无管理员权限')
+    }
+    return handleAdminUsers(req, res)
+  }
+
+  const adminActionMatch = path.match(/^\/v1\/admin\/users\/([^/]+)\/(records|reset-password)$/)
+  if (adminActionMatch) {
+    const user = findUserByToken(token)
+    if (!user) {
+      return send(res, 401, 10001, '登录已失效，请重新登录')
+    }
+    if (!isAdminAccount(user.account)) {
+      return send(res, 403, 10001, '无管理员权限')
+    }
+    const targetUserId = adminActionMatch[1]
+    const action = adminActionMatch[2]
+    if (action === 'records' && req.method === 'GET') {
+      return handleAdminUserRecords(req, res, targetUserId)
+    }
+    if (action === 'reset-password' && req.method === 'POST') {
+      return handleAdminResetPassword(req, res, targetUserId)
+    }
+    return send(res, 405, 10004, '请求方法不支持')
   }
 
   const goalMatch = path.match(/^\/v1\/goals(?:\/([^/]+))?$/)
