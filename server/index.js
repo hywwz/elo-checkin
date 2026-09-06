@@ -21,6 +21,7 @@ import {
 import { handleGoalsRequest } from './goals.js'
 import { handleCheckinsRequest, handleWeekProgress } from './checkins.js'
 import { handleStatistics } from './statistics.js'
+import { APP_UPDATE } from './app-update.js'
 
 const PORT = Number(process.env.PORT || 3000)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -179,6 +180,11 @@ async function route(req, res) {
 
   if (path === '/v1/health' && req.method === 'GET') {
     return send(res, 200, 0, 'ok', { service: 'elo-backend', time: nowIso() })
+  }
+
+  // App 更新检查（无需登录，供 App 启动/主页时调用）
+  if (path === '/v1/app/update' && req.method === 'GET') {
+    return send(res, 200, 0, 'ok', APP_UPDATE)
   }
 
   if (path === '/v1/auth/register' && req.method === 'POST') {

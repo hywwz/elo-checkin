@@ -72,6 +72,10 @@
 
 <script>
 import { get, post, del } from '../../utils/request.js'
+import { API_BASE_URL } from '../../utils/api-config.js'
+
+// 当前安装版本：与 src/manifest.json 的 versionName 保持一致
+const CURRENT_VERSION = '1.0.1'
 
 export default {
   data() {
@@ -98,8 +102,62 @@ export default {
     this.setGreeting()
     this.setUserInfo()
     this.fetchGoals()
+    this.checkForUpdate()
   },
   methods: {
+    checkForUpdate() {
+      // #ifdef APP-PLUS
+      if (this.updateChecked) return
+      this.updateChecked = true
+      uni.request({
+        url: `${API_BASE_URL}/app/update`,
+        method: 'GET',
+        timeout: 10000,
+        success: res => {
+          const body = res && res.data
+          const latest = body && body.data && body.data.latestVersion
+          if (!latest || !this.isNewerVersion(latest, CURRENT_VERSION)) return
+          const url = body.data.downloadUrl
+          const notes = body.data.releaseNotes
+          uni.showModal({
+            title: `发现新版本 v${latest}`,
+            content: notes || '有新版本可以更新，是否立即下载？',
+            confirmText: '立即更新',
+            cancelText: '暂不',
+            success: confirm => {
+              if (!confirm.confirm) return
+              if (url) {
+                // App 端用系统浏览器打开 APK 下载地址
+                plus.runtime.openURL(url)
+              } else {
+                uni.showToast({
+                  title: '新版本即将发布，请稍后再试',
+                  icon: 'none'
+                })
+              }
+            }
+          })
+        },
+        fail: () => {
+          // 更新检查失败静默处理，不打扰正常使用
+        }
+      })
+      // #endif
+    },
+    isNewerVersion(latest, current) {
+      const parse = v =>
+        String(v)
+          .replace(/^v/i, '')
+          .split('.')
+          .map(n => parseInt(n, 10) || 0)
+      const a = parse(latest)
+      const b = parse(current)
+      for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
+        if ((a[i] || 0) > (b[i] || 0)) return true
+        if ((a[i] || 0) < (b[i] || 0)) return false
+      }
+      return false
+    },
     setDate() {
       const d = new Date()
       const week = ['日', '一', '二', '三', '四', '五', '六']
