@@ -6,6 +6,8 @@
 - 后端：纯 Node.js + 内置 `node:sqlite`（零第三方依赖，需 Node 22+）
 - 部署：GitHub Actions 构建镜像 → ghcr.io → Sealos 运行
 
+<p align="center"><img src="src/static/app-icon-final.png" width="180" alt="elo 打卡 App 图标"></p>
+
 ---
 
 ## 功能特性
@@ -130,10 +132,6 @@ App 图标（E + 打勾 设计稿）已配置在 `src/manifest.json` → `app-pl
 - 打包用图：`src/static/app-icon-48/72/96/144/192.png`（Android mdpi → xxxhdpi）
 
 更换图标时，替换以上文件或在 HBuilderX 可视化界面中重新选择即可。
-
-实际图标预览（保存在仓库 `src/static/` 下）：
-
-![elo 打卡 App 图标](src/static/app-icon-final.png)
 
 ---
 
