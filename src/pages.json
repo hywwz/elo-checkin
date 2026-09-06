@@ -7,6 +7,12 @@
       }
     },
     {
+      "path": "pages/account-security/account-security",
+      "style": {
+        "navigationBarTitleText": "账号与安全"
+      }
+    },
+    {
       "path": "pages/register/register",
       "style": {
         "navigationBarTitleText": "注册"
