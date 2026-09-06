@@ -62,6 +62,10 @@
         <view class="manage-btn" @click="goNew">＋ 新目标</view>
       </view>
 
+      <view class="logout-row">
+        <text class="logout-btn" @click="logout">退出登录</text>
+      </view>
+
       <text class="foot-hint">记录只属于你自己，慢慢来也没关系</text>
     </view>
   </view>
@@ -181,6 +185,17 @@ export default {
     },
     editGoal(g) {
       uni.navigateTo({ url: `/pages/edit-goal/edit-goal?id=${encodeURIComponent(g.id)}` })
+    },
+    async logout() {
+      try {
+        // 通知后端销毁当前会话；失败也继续本地清理
+        await post('/auth/logout')
+      } catch (err) {
+        // 忽略接口报错
+      }
+      uni.removeStorageSync('eloToken')
+      uni.removeStorageSync('eloUser')
+      uni.reLaunch({ url: '/pages/login/login' })
     }
   }
 }
@@ -436,6 +451,17 @@ export default {
   border-radius: 24rpx;
   padding: 18rpx 26rpx;
   box-shadow: 0 14rpx 24rpx -12rpx rgba(13, 148, 90, 0.8);
+}
+.logout-row {
+  display: flex;
+  justify-content: center;
+  padding: 18rpx 0 4rpx;
+}
+.logout-btn {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #9AA6BA;
+  padding: 12rpx 30rpx;
 }
 .foot-hint {
   display: block;
