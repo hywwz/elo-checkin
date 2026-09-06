@@ -291,19 +291,29 @@ export default {
 .pwd-wrap {
   display: flex;
   align-items: center;
+  position: relative;
+  width: 100%;
+  height: 104rpx;
   background: #fff;
   border: 3rpx solid #E4E8F1;
   border-radius: 30rpx;
-  padding-right: 20rpx;
 }
 .pwd-wrap .field {
   flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  height: 100rpx;
+  padding-right: 80rpx;
 }
 .eye {
-  flex-shrink: 0;
+  position: absolute;
+  right: 18rpx;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 24rpx;
   color: #98A3BA;
-  padding: 20rpx 10rpx;
+  padding: 12rpx 8rpx;
 }
 .err {
   display: block;
