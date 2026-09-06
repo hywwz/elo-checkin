@@ -18,8 +18,8 @@
 | --- | --- | --- |
 | GitHub 仓库 | ✅ v1.0.1 代码已推送 | https://github.com/hywwz/elo-checkin |
 | 后端（Sealos） | ✅ 运行中（v1.0.1 镜像） | https://cywspqlnlffd.cloud.sealos.io |
-| 微信小程序 | ✅ 体验版 1.0.0 | 已添加体验成员 |
-| Android App | ✅ APK 已打包 | `dist/build/app/unpackage/release/apk/H5680A95B__20260906032340.apk` |
+| 微信小程序 | ✅ 体验版 1.0.1 | 已添加体验成员 |
+| Android App | ✅ APK 已打包（1.0.1） | `dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk` |
 | 本地代码 | ✅ 干净可构建 | master 分支（v1.0.1：账号与安全 / 管理员 / 记住密码） |
 | 接口文档 | ✅ | [backend-api.md](backend-api.md) |
 
@@ -202,7 +202,7 @@ npx uni build -p app
 → Submit，2~5 分钟出 APK
 ```
 
-当前 APK：`dist/build/app/unpackage/release/apk/H5680A95B__20260906032340.apk`
+当前 APK：`dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk`（v1.0.1）
 
 ---
 
