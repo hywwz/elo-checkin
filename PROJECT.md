@@ -16,12 +16,23 @@
 
 | 项目 | 状态 | 地址/说明 |
 | --- | --- | --- |
-| GitHub 仓库 | ✅ 已保存 | https://github.com/hywwz/elo-checkin |
-| 后端（Sealos） | ✅ 运行中 | https://cywspqlnlffd.cloud.sealos.io |
+| GitHub 仓库 | ✅ v1.0.1 代码已推送 | https://github.com/hywwz/elo-checkin |
+| 后端（Sealos） | ✅ 运行中（v1.0.1 镜像） | https://cywspqlnlffd.cloud.sealos.io |
 | 微信小程序 | ✅ 体验版 1.0.0 | 已添加体验成员 |
 | Android App | ✅ APK 已打包 | `dist/build/app/unpackage/release/apk/H5680A95B__20260906032340.apk` |
-| 本地代码 | ✅ 干净可构建 | master 分支，最新 commit：`4d2cf39` |
+| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.1：账号与安全 / 管理员 / 记住密码） |
 | 接口文档 | ✅ | [backend-api.md](backend-api.md) |
+
+---
+
+### v1.0.1 变更摘要
+
+- 登录页“记住密码”改为固定密钥 AES 加密存储，退出登录后可回显真实密码
+- 新增“账号与安全”页：旧密码校验修改密码、显示/隐藏密码、退出登录
+- 打卡主页右上角新增账号/安全入口
+- 管理员（默认账号：`测试1`）：用户列表、查看目标完成与打卡记录、重置密码、删除用户
+- 登录页“忘记密码”改为“联系项目管理员”提示
+- 后端新增 `/auth/change-password`、`/auth/logout` 与管理员接口
 
 ---
 
@@ -110,6 +121,8 @@ src/
 | --- | --- | --- |
 | POST | `/v1/auth/register` | 注册（支持 nickname） |
 | POST | `/v1/auth/login` | 登录 |
+| POST | `/v1/auth/logout` | 退出登录（销毁当前会话） |
+| POST | `/v1/auth/change-password` | 修改密码（需旧密码，成功后清除全部会话） |
 | GET | `/v1/users/me` | 当前用户 |
 | GET | `/v1/goals?date=YYYY-MM-DD` | 目标列表 + 今日完成状态 + 连续天数 |
 | POST | `/v1/goals` | 新建目标 |
@@ -119,6 +132,10 @@ src/
 | DELETE | `/v1/checkins/today` | 取消今日打卡 |
 | GET | `/v1/checkins` | 打卡记录 |
 | GET | `/v1/statistics?period=this_month/last_month/this_year` | 统计 |
+| GET | `/v1/admin/users` | 管理员：用户列表 |
+| GET | `/v1/admin/users/{id}/records` | 管理员：查看用户目标与打卡记录 |
+| POST | `/v1/admin/users/{id}/reset-password` | 管理员：重置密码并生成临时密码 |
+| DELETE | `/v1/admin/users/{id}/delete` | 管理员：删除用户（级联清理） |
 | GET | `/v1/health` | 健康检查 |
 
 ---
