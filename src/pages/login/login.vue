@@ -42,7 +42,13 @@
           <text v-if="errors.password" class="err">{{ errors.password }}</text>
         </view>
 
-        <view class="row-right">
+        <view class="row-between">
+          <view class="remember" @click="rememberPwd = !rememberPwd">
+            <view class="checkbox" :class="{ checked: rememberPwd }">
+              <text v-if="rememberPwd" class="tick">✓</text>
+            </view>
+            <text class="remember-label">记住密码</text>
+          </view>
           <text class="forgot" @click="tip('原型示意：跳转「找回密码」安全验证')">忘记密码？</text>
         </view>
 
@@ -65,7 +71,12 @@
 </template>
 
 <script>
+import CryptoJS from 'crypto-js'
 import { post } from '../../utils/request.js'
+
+// 仅用于本地“记住密码”的对称加密密钥（防明文拖库，不用于服务端校验）
+const REMEMBER_SECRET = 'elo-checkin-local-remember-v1'
+const SAVED_PASSWORD_KEY = 'eloSavedPassword'
 
 export default {
   data() {
@@ -73,12 +84,26 @@ export default {
       account: '',
       password: 'elo@2026',
       showPwd: false,
+      rememberPwd: false,
       loading: false,
       errors: {}
     }
   },
   onLoad() {
     this.account = uni.getStorageSync('eloAccount') || 'design@elo.cn'
+    const remembered = uni.getStorageSync('eloRememberPwd')
+    this.rememberPwd = remembered === true || remembered === 'true'
+    if (this.rememberPwd) {
+      const encrypted = uni.getStorageSync(SAVED_PASSWORD_KEY)
+      if (encrypted) {
+        try {
+          const bytes = CryptoJS.AES.decrypt(encrypted, REMEMBER_SECRET)
+          this.password = bytes.toString(CryptoJS.enc.Utf8)
+        } catch (err) {
+          this.password = ''
+        }
+      }
+    }
   },
   methods: {
     tip(text) {
@@ -115,6 +140,7 @@ export default {
         uni.setStorageSync('eloToken', data.token)
         uni.setStorageSync('eloUser', data.user)
         uni.setStorageSync('eloAccount', this.account.trim())
+        this.saveRememberedPassword()
         this.loading = false
         uni.showToast({ title: '登录成功', icon: 'success' })
         setTimeout(() => {
@@ -122,6 +148,22 @@ export default {
         }, 800)
       } catch (err) {
         this.loading = false
+      }
+    },
+    saveRememberedPassword() {
+      try {
+        if (this.rememberPwd) {
+          uni.setStorageSync('eloRememberPwd', true)
+          uni.setStorageSync(
+            SAVED_PASSWORD_KEY,
+            CryptoJS.AES.encrypt(this.password, REMEMBER_SECRET).toString()
+          )
+        } else {
+          uni.setStorageSync('eloRememberPwd', false)
+          uni.removeStorageSync(SAVED_PASSWORD_KEY)
+        }
+      } catch (err) {
+        // 本地加密存储失败时静默降级，本次不记住密码
       }
     }
   }
@@ -244,10 +286,43 @@ export default {
   font-size: 22rpx;
   color: #E5484D;
 }
-.row-right {
+.row-between {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 26rpx;
+}
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 10rpx;
+}
+.checkbox {
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 10rpx;
+  border: 3rpx solid #C4CEDF;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.checkbox.checked {
+  background: linear-gradient(135deg, #22C55E, #0BA360);
+  border-color: transparent;
+}
+.tick {
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 800;
+  line-height: 1;
+}
+.remember-label {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #4A5568;
 }
 .forgot {
   font-size: 24rpx;
