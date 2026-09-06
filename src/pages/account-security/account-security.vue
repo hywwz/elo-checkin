@@ -10,6 +10,15 @@
         <view class="profile-tag">已登录</view>
       </view>
 
+      <view v-if="isAdmin" class="admin-entry" @click="goAdmin">
+        <view class="admin-badge">管</view>
+        <view class="admin-copy">
+          <text class="admin-title">管理员工具</text>
+          <text class="admin-sub">查看用户打卡记录 · 重置密码</text>
+        </view>
+        <text class="admin-arrow">›</text>
+      </view>
+
       <view class="section-head">
         <text class="section-title">修改密码</text>
         <text class="section-sub">修改成功后需重新登录</text>
@@ -66,7 +75,7 @@
 </template>
 
 <script>
-import { post } from '../../utils/request.js'
+import { get, post } from '../../utils/request.js'
 
 export default {
   data() {
@@ -74,6 +83,7 @@ export default {
       account: '',
       nickname: '朋友',
       avatarText: '友',
+      isAdmin: false,
       oldPassword: '',
       newPassword: '',
       confirmPassword: '',
@@ -90,6 +100,7 @@ export default {
   },
   onShow() {
     this.setUserInfo()
+    this.refreshUser()
   },
   methods: {
     setUserInfo() {
@@ -98,6 +109,20 @@ export default {
       this.nickname = name || '朋友'
       this.avatarText = name ? name.charAt(0) : '友'
       this.account = (user && user.account) || ''
+      this.isAdmin = Boolean(user && user.isAdmin)
+    },
+    async refreshUser() {
+      try {
+        const data = await get('/users/me')
+        const user = data.user
+        uni.setStorageSync('eloUser', user)
+        this.setUserInfo()
+      } catch (err) {
+        // 请求层已提示；本地缓存信息仍可展示
+      }
+    },
+    goAdmin() {
+      uni.navigateTo({ url: '/pages/admin-users/admin-users' })
     },
     validate() {
       const errors = {}
@@ -216,6 +241,52 @@ export default {
   border: 2rpx solid #BCEBCE;
   border-radius: 999rpx;
   padding: 7rpx 16rpx;
+}
+.admin-entry {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: #fff;
+  border: 2rpx solid #D6EFE1;
+  border-radius: 32rpx;
+  padding: 22rpx 26rpx;
+  margin-top: 22rpx;
+  box-shadow: 0 16rpx 32rpx -26rpx rgba(20, 65, 46, 0.65);
+}
+.admin-badge {
+  width: 64rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+  border-radius: 22rpx;
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 24rpx -12rpx rgba(37, 99, 235, 0.75);
+}
+.admin-copy {
+  flex: 1;
+  min-width: 0;
+}
+.admin-title {
+  display: block;
+  font-size: 27rpx;
+  font-weight: 800;
+  color: #243042;
+}
+.admin-sub {
+  display: block;
+  font-size: 19rpx;
+  color: #8E9AAF;
+  margin-top: 3rpx;
+}
+.admin-arrow {
+  font-size: 34rpx;
+  color: #C0CADA;
+  font-weight: 700;
 }
 .section-head {
   display: flex;

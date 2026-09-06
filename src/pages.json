@@ -13,6 +13,18 @@
       }
     },
     {
+      "path": "pages/admin-users/admin-users",
+      "style": {
+        "navigationBarTitleText": "管理员 · 用户列表"
+      }
+    },
+    {
+      "path": "pages/admin-user/admin-user",
+      "style": {
+        "navigationBarTitleText": "用户打卡记录"
+      }
+    },
+    {
       "path": "pages/register/register",
       "style": {
         "navigationBarTitleText": "注册"

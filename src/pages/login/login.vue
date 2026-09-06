@@ -49,7 +49,7 @@
             </view>
             <text class="remember-label">记住密码</text>
           </view>
-          <text class="forgot" @click="tip('原型示意：跳转「找回密码」安全验证')">忘记密码？</text>
+          <text class="forgot" @click="contactAdmin">忘记密码？</text>
         </view>
 
         <button class="btn primary" :disabled="loading" @click="login">
@@ -108,6 +108,14 @@ export default {
   methods: {
     tip(text) {
       uni.showToast({ title: text, icon: 'none' })
+    },
+    contactAdmin() {
+      uni.showModal({
+        title: '忘记密码',
+        content: '当前为体验版，暂不支持自助找回。请联系管理员「陈晨」协助重置密码。',
+        showCancel: false,
+        confirmText: '知道了'
+      })
     },
     goRegister() {
       uni.navigateTo({ url: '/pages/register/register' })
