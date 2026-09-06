@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { db } from './db.js'
-import { hashPassword } from './auth.js'
+import { hashPassword, isAdminAccount } from './auth.js'
 
 function send(res, status, code, message, data = null) {
   const body = JSON.stringify({ code, message, data })
@@ -115,4 +115,30 @@ export function handleAdminResetPassword(req, res, userId) {
     userId,
     temporaryPassword
   })
+}
+
+export function handleAdminDeleteUser(req, res, userId) {
+  const user = db
+    .prepare('SELECT id, account, nickname FROM users WHERE id = ?')
+    .get(userId)
+  if (!user) {
+    return send(res, 404, 10003, '用户不存在')
+  }
+  if (isAdminAccount(user.account)) {
+    return send(res, 400, 10004, '不能删除管理员账号')
+  }
+
+  db.exec('BEGIN')
+  try {
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
+    db.prepare('DELETE FROM checkins WHERE user_id = ?').run(userId)
+    db.prepare('DELETE FROM goals WHERE user_id = ?').run(userId)
+    db.prepare('DELETE FROM users WHERE id = ?').run(userId)
+    db.exec('COMMIT')
+  } catch (err) {
+    db.exec('ROLLBACK')
+    throw err
+  }
+
+  return send(res, 200, 0, '用户已删除', { userId })
 }

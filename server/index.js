@@ -15,7 +15,8 @@ import {
 import {
   handleAdminUsers,
   handleAdminUserRecords,
-  handleAdminResetPassword
+  handleAdminResetPassword,
+  handleAdminDeleteUser
 } from './admin.js'
 import { handleGoalsRequest } from './goals.js'
 import { handleCheckinsRequest, handleWeekProgress } from './checkins.js'
@@ -218,7 +219,7 @@ async function route(req, res) {
     return handleAdminUsers(req, res)
   }
 
-  const adminActionMatch = path.match(/^\/v1\/admin\/users\/([^/]+)\/(records|reset-password)$/)
+  const adminActionMatch = path.match(/^\/v1\/admin\/users\/([^/]+)\/(records|reset-password|delete)$/)
   if (adminActionMatch) {
     const user = findUserByToken(token)
     if (!user) {
@@ -234,6 +235,9 @@ async function route(req, res) {
     }
     if (action === 'reset-password' && req.method === 'POST') {
       return handleAdminResetPassword(req, res, targetUserId)
+    }
+    if (action === 'delete' && req.method === 'DELETE') {
+      return handleAdminDeleteUser(req, res, targetUserId)
     }
     return send(res, 405, 10004, '请求方法不支持')
   }
