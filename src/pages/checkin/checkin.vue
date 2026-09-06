@@ -13,6 +13,9 @@
             <view class="bar b2"></view>
             <view class="bar b3"></view>
           </view>
+          <view class="nav-btn nav-account" @click="goAccount">
+            <view class="shield-ico"></view>
+          </view>
           <view class="avatar">{{ avatarText }}</view>
         </view>
       </view>
@@ -60,10 +63,6 @@
           <text class="m-sub">日日行，不怕千万里；常常做，不怕千万事。</text>
         </view>
         <view class="manage-btn" @click="goNew">＋ 新目标</view>
-      </view>
-
-      <view class="logout-row">
-        <text class="logout-btn" @click="logout">退出登录</text>
       </view>
 
       <text class="foot-hint">记录只属于你自己，慢慢来也没关系</text>
@@ -180,22 +179,14 @@ export default {
     goStats() {
       uni.navigateTo({ url: '/pages/statistics/statistics' })
     },
+    goAccount() {
+      uni.navigateTo({ url: '/pages/account-security/account-security' })
+    },
     goNew() {
       uni.navigateTo({ url: '/pages/set-goal/set-goal' })
     },
     editGoal(g) {
       uni.navigateTo({ url: `/pages/edit-goal/edit-goal?id=${encodeURIComponent(g.id)}` })
-    },
-    async logout() {
-      try {
-        // 通知后端销毁当前会话；失败也继续本地清理
-        await post('/auth/logout')
-      } catch (err) {
-        // 忽略接口报错
-      }
-      uni.removeStorageSync('eloToken')
-      uni.removeStorageSync('eloUser')
-      uni.reLaunch({ url: '/pages/login/login' })
     }
   }
 }
@@ -272,6 +263,15 @@ export default {
 }
 .b3 {
   height: 36rpx;
+}
+.nav-account {
+  color: #0B7A4E;
+}
+.shield-ico {
+  width: 21rpx;
+  height: 25rpx;
+  background: currentColor;
+  clip-path: polygon(50% 0%, 96% 12%, 88% 56%, 72% 84%, 50% 100%, 28% 84%, 12% 56%, 4% 12%);
 }
 .avatar {
   width: 104rpx;
@@ -451,17 +451,6 @@ export default {
   border-radius: 24rpx;
   padding: 18rpx 26rpx;
   box-shadow: 0 14rpx 24rpx -12rpx rgba(13, 148, 90, 0.8);
-}
-.logout-row {
-  display: flex;
-  justify-content: center;
-  padding: 18rpx 0 4rpx;
-}
-.logout-btn {
-  font-size: 24rpx;
-  font-weight: 700;
-  color: #9AA6BA;
-  padding: 12rpx 30rpx;
 }
 .foot-hint {
   display: block;
