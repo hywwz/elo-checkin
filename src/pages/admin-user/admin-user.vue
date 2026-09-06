@@ -58,13 +58,16 @@
         <view class="reset-btn" :class="{ disabled: resetting }" @click="confirmReset">
           <text>{{ resetting ? '正在重置…' : '重置该用户密码' }}</text>
         </view>
+        <view class="delete-btn" :class="{ disabled: deleting }" @click="confirmDelete">
+          <text>{{ deleting ? '正在删除…' : '删除该用户' }}</text>
+        </view>
       </template>
     </view>
   </view>
 </template>
 
 <script>
-import { get, post } from '../../utils/request.js'
+import { del, get, post } from '../../utils/request.js'
 
 export default {
   data() {
@@ -75,7 +78,8 @@ export default {
       goals: [],
       records: [],
       loading: true,
-      resetting: false
+      resetting: false,
+      deleting: false
     }
   },
   computed: {
@@ -155,6 +159,30 @@ export default {
         // 请求层已提示
       } finally {
         this.resetting = false
+      }
+    },
+    confirmDelete() {
+      uni.showModal({
+        title: '删除用户',
+        content: `确定删除用户「${this.nickname}」吗？该用户的目标、打卡记录和登录会话将一并删除，且不可恢复。`,
+        confirmText: '删除',
+        confirmColor: '#E5484D',
+        success: res => {
+          if (res.confirm) this.doDelete()
+        }
+      })
+    },
+    async doDelete() {
+      if (this.deleting) return
+      this.deleting = true
+      try {
+        await del(`/admin/users/${encodeURIComponent(this.userId)}/delete`)
+        uni.showToast({ title: '用户已删除', icon: 'success' })
+        setTimeout(() => uni.navigateBack(), 600)
+      } catch (err) {
+        // 请求层已提示
+      } finally {
+        this.deleting = false
       }
     }
   }
@@ -351,6 +379,23 @@ export default {
   letter-spacing: 2rpx;
 }
 .reset-btn.disabled {
+  opacity: 0.7;
+}
+.delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20rpx;
+  height: 88rpx;
+  border-radius: 30rpx;
+  background: #fff;
+  border: 2rpx solid #F6D9DA;
+  color: #E5484D;
+  font-size: 25rpx;
+  font-weight: 800;
+  letter-spacing: 2rpx;
+}
+.delete-btn.disabled {
   opacity: 0.7;
 }
 .empty {
