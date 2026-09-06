@@ -19,7 +19,7 @@
 | GitHub 仓库 | ✅ v1.0.1 代码已推送 | https://github.com/hywwz/elo-checkin（master / 标签 v1.0.1 = `5de1470`） |
 | 后端（Sealos） | ✅ 运行中（v1.0.1 镜像） | https://cywspqlnlffd.cloud.sealos.io |
 | 微信小程序 | ✅ 体验版 1.0.1 | 已添加体验成员 |
-| Android App | ✅ APK 已打包（1.0.1）；新图标待云打包复核 | `dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk` |
+| Android App | ⏳ 新资源（图标+更新检查）已编译就绪，等云打包 | DCloud 免费打包机 2026-09-06 已满额，次日重试；旧包 `dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk` |
 | 本地代码 | ✅ 干净可构建 | master 分支（v1.0.1：账号与安全 / 管理员 / 记住密码 / 正式图标 / App 内更新检查） |
 | 接口文档 | ✅ | [backend-api.md](backend-api.md) |
 
@@ -304,6 +304,7 @@ https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/xxx.apk
 - 云打包前账号必须在 DCloud 开发者中心**验证手机号**
 - 新版安卓打包**不允许用公共测试证书**，要用**云端证书**（开发者中心创建）
 - 测试期 Channel 选 None 即可，不用发各应用市场
+- DCloud **免费云打包名额每日有限**：当天满了会提示"打包机已满"，可次日再打或付费；非紧急发版建议攒批一次打，避免多次占用免费名额
 
 ### 7.6 Git 标签与版本对应
 
