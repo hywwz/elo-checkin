@@ -276,6 +276,7 @@ https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/xxx.apk
 - App 资源：`npx uni build -p app`
 - App 资源不能直接变安装包：真正的 APK/IPA 需要 HBuilderX 云打包
 - uni-app SDK 版本要和 HBuilderX 版本匹配（本项目 SDK 5.24 ↔ HBuilderX 5.24）
+- 小程序/App 端做等宽布局时，记得显式声明 `box-sizing: border-box`，避免输入框 padding 撑宽导致视觉不等宽（详见踩坑 8.6）
 
 ### 7.2 GitHub + GHCR + Sealos 的无服务器部署
 
@@ -379,6 +380,23 @@ new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', ... })
 3. 公共测试证书不可用 → 开发者中心创建 Android 云端证书
 
 之后打包即成功。
+
+### 8.6 登录页两个输入框宽度不一致
+
+现象：登录页账号框与密码框长度不一致（密码框明显宽一截，截图量出约差 24px）。
+
+原因：密码框为容纳"显示/隐藏"按钮做了右内边距，但样式未显式声明 `box-sizing: border-box`。小程序/App 端输入框在内容盒模型下会把 padding 向外撑宽，导致密码框比账号框长。
+
+解决：
+```css
+.field,
+.pwd-wrap,
+.pwd-wrap .field {
+  box-sizing: border-box;
+}
+```
+
+经验：**涉及"两个框要对齐 / 宽度要相等"的样式，先确认 box-sizing**；默认的 content-box 下，同样 `width:100%` 的元素会因 padding 不同而宽度不同。眼睛按钮等"框内悬浮"元素用绝对定位，不参与文档流占位，可避免二次挤压。
 
 ---
 
