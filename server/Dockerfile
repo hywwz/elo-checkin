@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json ./
 RUN npm install --omit=dev
 
-COPY db.js auth.js goals.js checkins.js statistics.js time.js index.js ./
+COPY *.js ./
 
 ENV NODE_ENV=production
 ENV PORT=3000
