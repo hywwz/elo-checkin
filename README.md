@@ -131,6 +131,10 @@ App 图标（E + 打勾 设计稿）已配置在 `src/manifest.json` → `app-pl
 
 更换图标时，替换以上文件或在 HBuilderX 可视化界面中重新选择即可。
 
+实际图标预览（保存在仓库 `src/static/` 下）：
+
+![elo 打卡 App 图标](src/static/app-icon-final.png)
+
 ---
 
 ## 接口一览

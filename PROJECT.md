@@ -229,6 +229,10 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
 
 注意：只重新 `npx uni build -p app` 不会自动换图标，必须先在 `src/manifest.json` 中写入 `icons` 配置再编译，HBuilderX 云打包才会使用新图。源码目录中还保留了历史过程稿 `app-icon.png`（E 字版）、`app-icon-check.png`（打勾版）、`app-icon-echeck.png`（E + 勾预览版）与根目录 `app-icon-preview.png` 对比图，均未删除。
 
+正式图标预览（源图保存在仓库 `src/static/` 下）：
+
+![elo 打卡 App 正式图标](src/static/app-icon-final.png)
+
 ---
 
 ## 7. 知识笔记
