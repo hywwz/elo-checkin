@@ -1,7 +1,7 @@
 {
-    "name" : "",
-    "appid" : "",
-    "description" : "",
+    "name" : "elo打卡",
+    "appid" : "H5680A95B",
+    "description" : "个人自我管理打卡工具：坚持小目标，看见自己的进步。",
     "versionName" : "1.0.1",
     "versionCode" : "101",
     "transformPx" : false,
