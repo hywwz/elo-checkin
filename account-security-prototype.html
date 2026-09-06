@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>账号与安全 · 可交互原型</title>
+<style>
+  :root{
+    --primary:#0FA968;
+    --deep:#047857;
+    --grad:#37D67F;
+    --ink:#111827;
+    --sub:#5F6B84;
+    --muted:#9AA6BA;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{min-height:100%}
+  body{
+    font-family:var(--font);
+    color:var(--ink);
+    background:
+      radial-gradient(1000px 560px at 12% -10%, #DDF9EA 0%, rgba(221,249,234,0) 60%),
+      radial-gradient(900px 620px at 112% 118%, #D7F7EC 0%, rgba(215,247,236,0) 55%),
+      #EAF3EC;
+    padding:32px 24px 44px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .stage-head{text-align:center;margin-bottom:22px}
+  .stage-head .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:11px;font-weight:700;letter-spacing:2.4px;color:var(--primary);
+  }
+  .stage-head .eyebrow::before{
+    content:"";width:7px;height:7px;border-radius:3px;
+    background:linear-gradient(135deg,var(--primary),var(--grad));
+    box-shadow:0 0 0 4px rgba(16,185,129,.16);
+  }
+  .stage-head h1{font-size:24px;font-weight:800;margin-top:8px}
+  .stage-head p{font-size:12.5px;color:var(--sub);margin-top:6px;line-height:1.6}
+
+  .workspace{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:42px;
+    flex-wrap:wrap;
+  }
+
+  /* ---------- 左侧操作示例 ---------- */
+  .guide{
+    width:360px;
+    background:rgba(255,255,255,.84);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border:1px solid rgba(255,255,255,.95);
+    border-radius:26px;
+    padding:24px 24px 22px;
+    box-shadow:0 28px 64px -32px rgba(24,94,62,.36);
+  }
+  .guide-kicker{
+    font-size:10.5px;font-weight:800;letter-spacing:2px;color:var(--primary);
+    display:flex;align-items:center;gap:8px;
+  }
+  .guide-kicker::before{
+    content:"";width:8px;height:8px;border-radius:4px;
+    background:linear-gradient(135deg,var(--primary),var(--grad));
+    box-shadow:0 0 0 4px rgba(16,185,129,.15);
+  }
+  .guide h2{font-size:20px;font-weight:800;margin-top:8px}
+  .guide .intro{font-size:12px;color:var(--sub);line-height:1.65;margin-top:5px}
+
+  .guide-block{
+    margin-top:17px;
+    border:1px solid #E1EEE7;
+    background:#FBFEFC;
+    border-radius:17px;
+    padding:13px 14px;
+  }
+  .guide-block h3{
+    font-size:11px;font-weight:800;color:#345B49;letter-spacing:.8px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .guide-block h3::before{content:"●";font-size:7px;color:var(--primary)}
+  .guide-block ol{
+    margin:9px 0 0 17px;
+    display:flex;flex-direction:column;gap:7px;
+    font-size:11.8px;color:#44516A;line-height:1.55;
+  }
+  .guide-block code{
+    font-family:"SF Mono",Consolas,Menlo,monospace;
+    font-size:10.5px;color:#047857;font-weight:700;
+    background:#E8F9F0;border:1px solid #D4F1E0;
+    border-radius:5px;padding:1px 5px;
+  }
+  .demo-box{
+    margin-top:14px;
+    background:linear-gradient(160deg,#F0FBF5,#F7FDF9);
+    border:1px dashed #9BE0BE;
+    border-radius:17px;
+    padding:14px 16px;
+  }
+  .demo-box b{
+    display:block;font-size:12px;font-weight:800;color:#243042;
+    margin-bottom:8px;
+  }
+  .demo-row{display:flex;justify-content:space-between;font-size:11.5px;line-height:1.9}
+  .demo-row span{color:#7A879E}
+  .demo-row code{
+    font-family:"SF Mono",Consolas,Menlo,monospace;
+    color:#0B7A4E;font-weight:800;font-size:11px;
+  }
+  .hint-line{
+    margin-top:12px;
+    font-size:11px;color:#8B96AA;line-height:1.6;
+    background:#F5F7FB;border-radius:11px;padding:9px 11px;
+  }
+
+  /* ---------- 单手机 ---------- */
+  .phone{
+    position:relative;
+    width:386px;height:836px;
+    background:#12141A;border:1px solid #000;border-radius:58px;
+    padding:9px;
+    box-shadow:0 0 0 2px #2A2E38,0 44px 92px -30px rgba(24,34,64,.72),0 14px 38px -18px rgba(24,34,64,.5);
+    flex:0 0 auto;
+  }
+  .phone .caption{
+    position:absolute;top:-32px;left:50%;transform:translateX(-50%);
+    font-size:11px;font-weight:800;color:#2D3B57;letter-spacing:.8px;
+    white-space:nowrap;
+  }
+  .screen{
+    position:relative;
+    width:100%;height:100%;
+    border-radius:49px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    background:
+      radial-gradient(500px 260px at 92% -4%, rgba(16,185,129,.13), rgba(16,185,129,0) 60%),
+      linear-gradient(180deg,#F9FCFA 0%,#F3F8F5 100%);
+  }
+  .statusbar{
+    position:relative;z-index:4;flex:0 0 34px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;color:#141A28;
+    font-size:12px;font-weight:700;
+  }
+  .sb-icons{display:flex;align-items:center;gap:5px}
+  .battery{position:relative;width:19px;height:9px;border:1px solid #394155;border-radius:2.5px;padding:1.5px;margin-left:2px}
+  .battery::after{content:"";position:absolute;right:-3px;top:2.5px;width:1.5px;height:4px;background:#394155;border-radius:0 2px 2px 0}
+  .battery b{display:block;width:70%;height:100%;background:#141A28;border-radius:1px}
+
+  .view{display:none;flex:1;flex-direction:column;padding:4px 22px 16px;min-height:0}
+  .view.active{display:flex}
+
+  /* ========== 打卡主页 ========== */
+  .home-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .home-head .kicker{font-size:10px;font-weight:700;color:#0E9F6E}
+  .home-head h2{font-size:22px;font-weight:800;color:#101828;margin-top:3px;line-height:1.25}
+  .home-head .sub{font-size:11.5px;color:#74819A;margin-top:2px}
+  .top-actions{display:flex;align-items:center;gap:8px}
+  .top-btn{
+    position:relative;
+    width:38px;height:38px;border-radius:13px;
+    background:#fff;border:1px solid #E2E7F0;color:#4B6A58;
+    display:grid;place-items:center;cursor:pointer;
+    box-shadow:0 5px 12px -7px rgba(30,55,80,.4);
+    transition:transform .15s ease,border-color .15s ease;
+  }
+  .top-btn:hover{transform:translateY(-1px);border-color:#A7E8C4}
+  .top-btn svg{width:16px;height:16px}
+  .top-btn.account-ico svg{color:#0B7A4E}
+  .top-btn .dot{
+    position:absolute;top:-4px;right:-4px;
+    width:11px;height:11px;border-radius:50%;
+    background:linear-gradient(135deg,#F59E0B,#EA580C);
+    border:2px solid #fff;
+  }
+  .avatar{
+    width:48px;height:48px;border-radius:16px;
+    background:linear-gradient(145deg,#22C55E,#047857);
+    color:#fff;font-size:16px;font-weight:800;
+    display:grid;place-items:center;
+    box-shadow:0 10px 20px -9px rgba(16,150,90,.65);
+  }
+  .today-row{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+  .today-row h3{font-size:13px;font-weight:800;color:#243042}
+  .left-group{display:flex;align-items:center;gap:8px}
+  .streak{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:9.5px;font-weight:800;color:#0B7A4E;
+    background:#E8F9F0;border:1px solid #BCEBCE;border-radius:99px;padding:3px 8px;
+  }
+  .streak svg{width:10px;height:10px;color:#F59E0B}
+  .done-chip{
+    font-size:10px;font-weight:800;color:#0B7A4E;
+    background:#E8F9F0;border-radius:99px;padding:5px 10px;
+  }
+  .goal-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .goal-row{
+    display:flex;align-items:center;gap:10px;
+    background:#fff;border:1px solid #E2EFE7;border-radius:18px;
+    padding:10px 12px;
+    box-shadow:0 10px 22px -22px rgba(20,65,46,.6);
+  }
+  .g-check{
+    flex:0 0 auto;width:33px;height:33px;border-radius:50%;
+    border:1.8px solid #C9D6E8;display:grid;place-items:center;
+    color:transparent;
+  }
+  .g-check.done{
+    border-color:transparent;
+    background:linear-gradient(135deg,#22C55E,#0BA360);
+    color:#fff;box-shadow:0 4px 10px -3px rgba(13,148,90,.5);
+  }
+  .g-check svg{width:14px;height:14px}
+  .goal-info{flex:1;min-width:0}
+  .goal-info b{display:block;font-size:12.5px;font-weight:800;color:#243042}
+  .goal-info p{display:block;font-size:10px;color:#7E8CA3;margin-top:1px}
+  .goal-info small{display:block;font-size:8.8px;color:#A0AABE;margin-top:2px}
+  .g-edit{
+    flex:0 0 auto;
+    font-size:9.5px;font-weight:700;color:#0B7A4E;
+    background:#E8F9F0;border-radius:8px;padding:4px 7px;
+  }
+  .manage-card{
+    display:flex;align-items:center;gap:10px;
+    background:#fff;border:1px solid #E2EFE7;border-radius:18px;
+    padding:11px 13px;margin-top:13px;
+    box-shadow:0 12px 26px -22px rgba(20,65,46,.6);
+  }
+  .manage-icon{
+    flex:0 0 auto;width:34px;height:34px;border-radius:11px;
+    background:#E8F9F0;display:grid;place-items:center;color:#0B7A4E;
+  }
+  .manage-icon svg{width:16px;height:16px}
+  .manage-copy{flex:1;min-width:0}
+  .manage-copy b{display:block;font-size:12.5px;font-weight:800;color:#243042}
+  .manage-copy small{display:block;font-size:9.5px;color:#A0AABE;margin-top:2px}
+  .manage-btn{
+    flex:0 0 auto;
+    font-size:10.5px;font-weight:800;color:#fff;
+    background:linear-gradient(135deg,#22C55E,#0BA360);
+    border-radius:10px;padding:8px 10px;
+    box-shadow:0 7px 14px -8px rgba(13,148,90,.8);
+  }
+  .foot-hint{
+    margin-top:auto;padding-top:13px;
+    text-align:center;font-size:9.5px;color:#9AA6BA;letter-spacing:.3px;
+  }
+
+  /* ========== 账号与安全 ========== */
+  .page-head{
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .back-btn{
+    width:38px;height:38px;border-radius:14px;
+    background:#fff;border:1px solid #E2E7F0;color:#2D3B57;
+    display:grid;place-items:center;cursor:pointer;
+    box-shadow:0 5px 12px -8px rgba(30,55,80,.45);
+  }
+  .back-btn:hover{transform:translateY(-1px)}
+  .back-btn svg{width:17px;height:17px}
+  .page-head h2{font-size:17px;font-weight:800;color:#101828;letter-spacing:.4px}
+  .head-spacer{width:38px}
+
+  .profile-card{
+    display:flex;align-items:center;gap:12px;
+    background:#fff;border:1px solid #E2EFE7;border-radius:22px;
+    padding:14px;margin-top:16px;
+    box-shadow:0 18px 38px -28px rgba(20,65,46,.65);
+  }
+  .profile-avatar{
+    flex:0 0 auto;width:54px;height:54px;border-radius:18px;
+    background:linear-gradient(145deg,#22C55E,#047857);
+    color:#fff;font-size:18px;font-weight:800;
+    display:grid;place-items:center;
+    box-shadow:0 10px 22px -10px rgba(16,150,90,.7);
+  }
+  .profile-copy{flex:1;min-width:0}
+  .profile-copy b{display:block;font-size:15px;font-weight:800;color:#101828}
+  .profile-copy small{display:block;font-size:10.5px;color:#8E9AAF;margin-top:3px}
+  .profile-tag{
+    flex:0 0 auto;
+    font-size:9px;font-weight:800;color:#0B7A4E;
+    background:#E8F9F0;border:1px solid #BCEBCE;
+    border-radius:99px;padding:3px 8px;
+  }
+
+  .section-title{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:17px 4px 9px;
+  }
+  .section-title h3{font-size:13px;font-weight:800;color:#243042}
+  .section-title small{font-size:9.5px;color:#9AA6BA}
+
+  .pwd-card{
+    background:#fff;border:1px solid #E2EFE7;border-radius:22px;
+    padding:2px 16px;
+    box-shadow:0 18px 38px -30px rgba(20,65,46,.6);
+  }
+  .pwd-row{display:flex;align-items:center;gap:10px;padding:12px 0}
+  .pwd-row + .pwd-row{border-top:1px solid #EEF2F7}
+  .pwd-label{
+    flex:0 0 58px;
+    font-size:11.5px;font-weight:700;color:#46506A;
+  }
+  .pwd-input{
+    flex:1;min-width:0;
+    font-size:11.5px;color:#172033;font-family:inherit;
+    background:transparent;border:0;outline:0;
+  }
+  .pwd-input::placeholder{color:#B7C0D1}
+  .eye-btn{
+    flex:0 0 auto;width:27px;height:27px;border-radius:9px;
+    background:#F2F6F4;color:#7E9A8C;
+    display:grid;place-items:center;cursor:pointer;border:0;
+  }
+  .eye-btn svg{width:14px;height:14px}
+
+  .form-msg{
+    display:none;
+    margin:10px 4px 0;
+    font-size:10px;font-weight:700;line-height:1.5;
+  }
+  .form-msg.show{display:block}
+  .form-msg.error{color:#C5484C}
+  .form-msg.ok{color:#0B7A4E}
+  .save-btn{
+    width:100%;
+    display:flex;align-items:center;justify-content:center;
+    margin-top:14px;
+    background:linear-gradient(135deg,#22C55E 0%,#10B981 58%,#047857 100%);
+    color:#fff;font-size:13.5px;font-weight:800;letter-spacing:1.5px;
+    border:0;border-radius:16px;padding:13px;
+    box-shadow:0 14px 26px -12px rgba(13,148,90,.7), inset 0 1px 0 rgba(255,255,255,.28);
+    font-family:inherit;cursor:pointer;
+  }
+  .save-btn:active{transform:scale(.98)}
+  .logout-card{
+    width:100%;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:#FFF7F7;border:1px solid #F6D9DA;border-radius:18px;
+    padding:13px;margin-top:auto;
+    color:#C5484C;font-size:12.5px;font-weight:800;letter-spacing:.8px;
+    font-family:inherit;cursor:pointer;
+  }
+  .logout-card:active{transform:scale(.98)}
+  .logout-card svg{width:14px;height:14px}
+  .demo-note{
+    margin-top:14px;
+    font-size:9.5px;color:#7C8A9F;line-height:1.6;
+    background:#F5F7FB;border-radius:13px;padding:9px 12px;
+  }
+
+  /* ========== 登录页（退出/改密后落地） ========== */
+  .auth-wrap{padding-top:16px;flex:1;display:flex;flex-direction:column}
+  .brand-row{display:flex;align-items:center;gap:11px}
+  .brand-mark{
+    width:46px;height:46px;border-radius:16px;
+    background:linear-gradient(135deg,#22C55E,#0BA360);
+    color:#fff;font-size:24px;font-weight:800;
+    display:grid;place-items:center;
+    box-shadow:0 12px 24px -10px rgba(10,150,90,.75);
+  }
+  .brand-text b{display:block;font-size:18px;font-weight:800;color:#171C28;line-height:1.15}
+  .brand-text small{display:block;font-size:9.5px;font-weight:700;color:#9BA6BC;letter-spacing:3px;margin-top:2px}
+  .auth-title{font-size:28px;font-weight:800;color:#101828;margin-top:28px;line-height:1.25}
+  .auth-sub{font-size:11.5px;color:#68738C;margin-top:6px;line-height:1.6}
+  .auth-form{margin-top:24px;display:flex;flex-direction:column;gap:14px}
+  .auth-input{
+    width:100%;height:50px;
+    background:#fff;border:1.5px solid #E4E8F1;border-radius:16px;
+    padding:0 15px;font-size:13px;color:#172033;font-family:inherit;outline:0;
+  }
+  .auth-input::placeholder{color:#ABB4C8}
+  .auth-input:focus{border-color:#86EFAC}
+  .pwd-shell{
+    display:flex;align-items:center;
+    background:#fff;border:1.5px solid #E4E8F1;border-radius:16px;
+    padding-right:10px;
+  }
+  .pwd-shell .auth-input{border:0;background:transparent}
+  .auth-login-btn{
+    width:100%;margin-top:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#22C55E 0%,#10B981 55%,#047857 100%);
+    color:#fff;font-size:14px;font-weight:800;letter-spacing:3px;
+    border:0;border-radius:16px;padding:14px;
+    box-shadow:0 16px 28px -13px rgba(13,148,90,.75);
+    font-family:inherit;cursor:pointer;
+  }
+  .auth-login-btn:active{transform:scale(.98)}
+  .auth-hint{
+    margin-top:auto;padding-top:18px;
+    text-align:center;font-size:10px;color:#8B96AA;line-height:1.7;
+  }
+  .auth-hint code{color:#0B7A4E;font-weight:800;font-family:Consolas,Menlo,monospace;font-size:10px}
+
+  /* ========== 登录页（与现有登录页保持一致） ========== */
+  .login-scope{
+    flex:1;min-height:0;
+    display:flex;flex-direction:column;
+    padding:34px 27px 12px;
+    position:relative;
+  }
+  .login-scope .brand-row{
+    display:flex;align-items:center;gap:10px;
+    position:relative;
+  }
+  .login-scope .brand-mark{
+    width:34px;height:34px;border-radius:11px;
+    background:linear-gradient(135deg,#22C55E 0%,#0BA360 100%);
+    color:#fff;font-size:18px;font-weight:800;
+    display:grid;place-items:center;
+    box-shadow:0 7px 16px -6px rgba(10,150,90,.55);
+  }
+  .login-scope .brand-text{line-height:1.15}
+  .login-scope .brand-name{
+    display:block;font-size:16px;font-weight:800;color:#171C28;letter-spacing:.2px;
+  }
+  .login-scope .brand-sub{
+    display:block;font-size:8.5px;font-weight:700;color:#9BA6BC;
+    letter-spacing:2px;margin-top:1px;
+  }
+  .login-scope .hello{margin-top:24px;position:relative}
+  .login-scope .hello-title{
+    display:block;font-size:27px;font-weight:800;color:#101828;line-height:1.25;
+  }
+  .login-scope .hello-sub{
+    display:block;font-size:12.5px;color:#68738C;margin-top:6px;line-height:1.55;
+  }
+  .login-scope .login-form{margin-top:18px;display:flex;flex-direction:column}
+  .login-scope .field-group{margin-bottom:10px}
+  .login-scope .label{
+    display:block;font-size:11.5px;font-weight:700;color:#3D465C;
+    margin:0 0 6px 3px;
+  }
+  .login-scope .star{color:#C03A3F;margin-left:2px}
+  .login-scope .field-row{
+    display:flex;align-items:center;gap:8px;
+    height:50px;background:#fff;
+    border:1.5px solid #E4E8F1;border-radius:15px;
+    padding:0 12px;
+    transition:border-color .2s ease,box-shadow .2s ease;
+  }
+  .login-scope .field-row:focus-within{
+    border-color:#0FA968;
+    box-shadow:0 0 0 4px rgba(16,185,129,.13);
+  }
+  .login-scope .field-row input{
+    flex:1;min-width:0;height:100%;
+    border:0;outline:0;background:transparent;
+    font-family:inherit;font-size:13.5px;color:#172033;
+  }
+  .login-scope .field-row input::placeholder{color:#ABB4C8}
+  .login-scope .pwd-wrap{border-radius:15px;padding-right:8px}
+  .login-scope .eye-toggle{
+    flex:0 0 auto;
+    font-size:11px;font-weight:700;color:#047857;
+    background:transparent;border:0;font-family:inherit;cursor:pointer;
+    padding:8px 6px;border-radius:8px;
+  }
+  .login-scope .row-between{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .login-scope .remember{display:flex;align-items:center;gap:7px;padding:6px}
+  .login-scope .checkbox{
+    width:18px;height:18px;border-radius:6px;
+    border:1.5px solid #C4CEDF;background:#fff;
+    display:grid;place-items:center;
+  }
+  .login-scope .checkbox.checked{
+    background:linear-gradient(135deg,#22C55E,#0BA360);
+    border-color:transparent;
+  }
+  .login-scope .checkbox svg{width:11px;height:11px;color:#fff}
+  .login-scope .remember-label{font-size:11px;font-weight:600;color:#4A5568}
+  .login-scope .forgot{
+    font-size:11.5px;font-weight:700;color:#047857;
+    background:transparent;border:0;font-family:inherit;cursor:pointer;padding:8px;
+  }
+  .login-scope .login-btn{
+    position:relative;
+    width:100%;height:52px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#22C55E 0%,#10B981 55%,#047857 100%);
+    color:#fff;font-size:15px;font-weight:800;letter-spacing:2px;
+    border:0;border-radius:16px;
+    box-shadow:0 14px 26px -10px rgba(13,148,90,.6), inset 0 1px 0 rgba(255,255,255,.28);
+    font-family:inherit;cursor:pointer;
+  }
+  .login-scope .login-btn:active{transform:scale(.98)}
+  .login-scope .switch-line{
+    display:flex;align-items:center;justify-content:center;gap:4px;
+    margin-top:20px;
+  }
+  .login-scope .switch-line span{font-size:11.5px;color:#7C879E}
+  .login-scope .register-link{
+    font-size:11.5px;font-weight:700;color:#047857;
+    background:transparent;border:0;font-family:inherit;cursor:pointer;padding:6px;
+  }
+  .login-scope .agreement{
+    margin-top:auto;padding-top:10px;
+    text-align:center;font-size:10px;color:#98A3B8;line-height:1.6;
+  }
+
+  .toast{
+    position:absolute;z-index:60;top:56px;left:50%;
+    transform:translate(-50%,-8px);
+    display:flex;align-items:center;gap:6px;
+    background:rgba(23,29,46,.94);color:#fff;
+    font-size:10.5px;font-weight:600;padding:8px 13px;border-radius:99px;
+    box-shadow:0 12px 26px -8px rgba(20,26,50,.5);
+    opacity:0;pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease;
+    white-space:nowrap;max-width:88%;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast svg{width:12px;height:12px;color:#8BE6B5;flex:0 0 auto}
+  .indicator{
+    position:absolute;bottom:6px;left:50%;transform:translateX(-50%);
+    width:112px;height:4px;border-radius:2px;background:rgba(15,19,32,.2);z-index:9;
+  }
+  .screen.flash::after{
+    content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+    background:rgba(34,197,94,.10);
+    opacity:0;transition:opacity .35s ease;
+  }
+  .screen.flash.active::after{opacity:1}
+</style>
+</head>
+<body>
+  <div class="stage-head">
+    <span class="eyebrow">High-fidelity Interactive Prototype · V2</span>
+    <h1>账号与安全 · 单机页面切换演示</h1>
+    <p>一个手机屏幕：主页小盾牌进入「账号与安全」，返回键回主页</p>
+  </div>
+
+  <div class="workspace">
+    <aside class="guide">
+      <div class="guide-kicker">TRY IT · 请按顺序操作</div>
+      <h2>验证示例</h2>
+      <p class="intro">原型里所有交互都可以点：页面切换、密码可见性、表单校验。</p>
+
+      <div class="guide-block">
+        <h3>操作步骤</h3>
+        <ol>
+          <li>点主页右上角、统计图标旁的<strong>绿色小盾牌</strong>，进入“账号与安全”；</li>
+          <li>点左上角<strong>返回</strong>，应直接回到打卡主页；</li>
+          <li>点旧密码右侧<strong>眼睛</strong>，密码应明文/密文切换；</li>
+          <li>用下方示例输入后点<strong>保存新密码</strong>，观察成功提示。</li>
+        </ol>
+      </div>
+
+      <div class="demo-box">
+        <b>演示账号（直接抄）</b>
+        <div class="demo-row"><span>登录账号</span><code>design@elo.cn</code></div>
+        <div class="demo-row"><span>当前旧密码</span><code>elo@2026</code></div>
+        <div class="demo-row"><span>建议新密码</span><code>Habit@2026</code></div>
+      </div>
+
+      <div class="hint-line">可故意输错旧密码、新密码少于 8 位、新旧相同、两次不一致，观察每一类错误提示。</div>
+    </aside>
+
+    <!-- ========== 单手机 ========== -->
+    <div class="phone">
+      <span class="caption">一个手机 · 主页 ⇄ 账号与安全</span>
+      <div class="screen" id="screen">
+        <div class="statusbar">
+          <span>9:41</span>
+          <span class="sb-icons">
+            <svg width="15" height="10" viewBox="0 0 15 10" fill="currentColor"><rect x="0" y="7" width="2.5" height="3" rx="0.7"/><rect x="4" y="5" width="2.5" height="5" rx="0.7"/><rect x="8" y="2.5" width="2.5" height="7.5" rx="0.7"/><rect x="12" y="0" width="2.5" height="10" rx="0.7"/></svg>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M1.2 3.6a8 8 0 0 1 11.6 0M3.3 5.8a5.3 5.3 0 0 1 7.4 0M5.5 8a2.6 2.6 0 0 1 3 0"/></svg>
+            <span class="battery"><b></b></span>
+          </span>
+        </div>
+
+        <!-- ============ 主页 ============ -->
+        <section class="view active" id="viewHome">
+          <header class="home-head">
+            <div>
+              <p class="kicker">9月6日 · 星期日</p>
+              <h2>下午好，陈晨</h2>
+              <p class="sub">今天也给自己打个卡吧</p>
+            </div>
+            <div class="top-actions">
+              <button class="top-btn" type="button" aria-label="查看统计">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5v-6M9.2 19.5v-11M14.4 19.5v-8M19.6 19.5V5.5"/></svg>
+              </button>
+              <button class="top-btn account-ico" id="accountEntry" type="button" aria-label="账号与安全">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 4.8 5.4v5.3c0 4.6 3.1 8.8 7.2 10.1 4.1-1.3 7.2-5.5 7.2-10.1V5.4L12 2.8Z"/><path d="m9 11.8 2.2 2.2 3.9-4"/></svg>
+                <span class="dot"></span>
+              </button>
+              <div class="avatar">陈</div>
+            </div>
+          </header>
+
+          <div class="today-row">
+            <span class="left-group">
+              <h3>今日打卡</h3>
+              <span class="streak">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2s4.8 6 4.8 10.2a4.8 4.8 0 0 1-9.6 0C7.2 8.2 12 2.2 12 2.2Z"/></svg>
+                已坚持 12 天
+              </span>
+            </span>
+            <span class="done-chip">2 / 2 完成</span>
+          </div>
+
+          <div class="goal-list">
+            <div class="goal-row">
+              <span class="g-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 10 18 19.5 7"/></svg></span>
+              <span class="goal-info">
+                <b>背单词</b>
+                <p>背 30 个单词</p>
+                <small>每天 1 次 · 21:30 提醒</small>
+              </span>
+              <span class="g-edit">修改</span>
+            </div>
+            <div class="goal-row">
+              <span class="g-check done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 10 18 19.5 7"/></svg></span>
+              <span class="goal-info">
+                <b>早睡</b>
+                <p>23:00 前放下手机</p>
+                <small>每天 1 次 · 22:40 提醒</small>
+              </span>
+              <span class="g-edit">修改</span>
+            </div>
+          </div>
+
+          <div class="manage-card">
+            <span class="manage-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 12H11l-1.5 10L18 10h-6.5L13 2Z"/></svg>
+            </span>
+            <span class="manage-copy">
+              <b>目标管理</b>
+              <small>日日行，不怕千万里</small>
+            </span>
+            <span class="manage-btn">＋ 新目标</span>
+          </div>
+
+          <p class="foot-hint">记录只属于你自己，慢慢来也没关系</p>
+        </section>
+
+        <!-- ============ 账号与安全 ============ -->
+        <section class="view" id="viewAccount">
+          <div class="page-head">
+            <button class="back-btn" id="backBtn" type="button" aria-label="返回主页">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+            </button>
+            <h2>账号与安全</h2>
+            <span class="head-spacer"></span>
+          </div>
+
+          <div class="profile-card">
+            <span class="profile-avatar">陈</span>
+            <span class="profile-copy">
+              <b>陈晨</b>
+              <small>design@elo.cn</small>
+            </span>
+            <span class="profile-tag">已登录</span>
+          </div>
+
+          <div class="section-title">
+            <h3>修改密码</h3>
+            <small>演示旧密码：elo@2026</small>
+          </div>
+
+          <div class="pwd-card">
+            <div class="pwd-row">
+              <label class="pwd-label" for="oldPwd">旧密码</label>
+              <input class="pwd-input" id="oldPwd" type="password" placeholder="请输入旧密码">
+              <button class="eye-btn" id="oldEye" type="button" aria-label="显示或隐藏旧密码"></button>
+            </div>
+            <div class="pwd-row">
+              <label class="pwd-label" for="newPwd">新密码</label>
+              <input class="pwd-input" id="newPwd" type="password" placeholder="请输入新密码">
+              <button class="eye-btn" id="newEye" type="button" aria-label="显示或隐藏新密码"></button>
+            </div>
+            <div class="pwd-row">
+              <label class="pwd-label" for="confirmPwd">确认新密码</label>
+              <input class="pwd-input" id="confirmPwd" type="password" placeholder="请再次输入新密码">
+              <button class="eye-btn" id="confirmEye" type="button" aria-label="显示或隐藏确认密码"></button>
+            </div>
+          </div>
+
+          <p class="form-msg error" id="pwdMsg"></p>
+          <button class="save-btn" id="savePwdBtn" type="button">保存新密码</button>
+
+          <div class="demo-note">真实接口保存成功后会清除该账号全部登录会话，需用新密码重新登录。</div>
+
+          <button class="logout-card" id="logoutBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4.5h4.2A1.8 1.8 0 0 1 21 6.3v11.4a1.8 1.8 0 0 1-1.8 1.8H15M10 8l-4 4 4 4M6 12h11"/></svg>
+            退出登录
+          </button>
+        </section>
+
+        <!-- ============ 登录页（退出/改密后落地） ============ -->
+        <section class="view" id="viewLogin">
+          <div class="login-scope">
+            <div class="brand-row">
+              <span class="brand-mark">e</span>
+              <span class="brand-text">
+                <span class="brand-name">elo</span>
+                <span class="brand-sub">Workplace</span>
+              </span>
+            </div>
+
+            <div class="hello">
+              <span class="hello-title">欢迎回来</span>
+              <span class="hello-sub">登录 elo 账号，继续你的高效工作</span>
+            </div>
+
+            <div class="login-form">
+              <div class="field-group">
+                <label class="label" for="loginAccount">账号<span class="star">*</span></label>
+                <div class="field-row">
+                  <input id="loginAccount" type="text" value="design@elo.cn" placeholder="邮箱 / 手机号">
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="label" for="loginPwd">密码<span class="star">*</span></label>
+                <div class="field-row pwd-wrap">
+                  <input id="loginPwd" type="password" placeholder="至少 8 位字符">
+                  <button class="eye-toggle" id="loginEye" type="button">显示</button>
+                </div>
+              </div>
+
+              <div class="row-between">
+                <span class="remember">
+                  <span class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 10 18 19.5 7"/></svg></span>
+                  <span class="remember-label">记住密码</span>
+                </span>
+                <button class="forgot" type="button">忘记密码？</button>
+              </div>
+
+              <button class="login-btn" id="loginBtn" type="button">登 录</button>
+
+              <div class="switch-line">
+                <span>还没有账号？</span>
+                <button class="register-link" type="button">立即注册</button>
+              </div>
+
+              <span class="agreement">登录即代表同意《服务协议》与《隐私政策》</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="toast" id="toast">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+          <span id="toastText"></span>
+        </div>
+        <div class="indicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const views = {
+      home: document.getElementById('viewHome'),
+      account: document.getElementById('viewAccount')
+    }
+    const screen = document.getElementById('screen')
+    const toast = document.getElementById('toast')
+    const toastText = document.getElementById('toastText')
+    const pwdMsg = document.getElementById('pwdMsg')
+    let toastTimer = null
+
+    function showView(name) {
+      Object.entries(views).forEach(([key, el]) => el.classList.toggle('active', key === name))
+      screen.scrollTop = 0
+    }
+
+    function showToast(text) {
+      toastText.textContent = text
+      toast.classList.add('show')
+      clearTimeout(toastTimer)
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400)
+    }
+
+    function flash() {
+      screen.classList.add('flash', 'active')
+      setTimeout(() => screen.classList.remove('flash', 'active'), 380)
+    }
+
+    function resetForm() {
+      document.getElementById('oldPwd').value = ''
+      document.getElementById('newPwd').value = ''
+      document.getElementById('confirmPwd').value = ''
+      pwdMsg.className = 'form-msg error'
+      pwdMsg.textContent = ''
+    }
+
+    // 主页 ⇄ 账号与安全
+    document.getElementById('accountEntry').addEventListener('click', () => {
+      showView('account')
+      flash()
+      showToast('已进入「账号与安全」')
+    })
+    document.getElementById('backBtn').addEventListener('click', () => {
+      showView('home')
+      flash()
+      showToast('已返回打卡主页')
+    })
+
+    // 密码可见性切换
+    const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.8 10-6.8S22 12 22 12s-3.6 6.8-10 6.8S2 12 2 12Z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/></svg>'
+    const EYE_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.8 10-6.8S22 12 22 12s-3.6 6.8-10 6.8S2 12 2 12Z"/><circle cx="12" cy="12" r="2.8"/></svg>'
+
+    function bindEye(btnId, inputId) {
+      const btn = document.getElementById(btnId)
+      const input = document.getElementById(inputId)
+      const sync = () => {
+        const visible = input.type === 'text'
+        btn.innerHTML = visible ? EYE_ON : EYE_OFF
+        btn.setAttribute('aria-label', visible ? '隐藏' : '显示')
+      }
+      btn.addEventListener('click', () => {
+        input.type = input.type === 'password' ? 'text' : 'password'
+        sync()
+      })
+      sync()
+    }
+    bindEye('oldEye', 'oldPwd')
+    bindEye('newEye', 'newPwd')
+    bindEye('confirmEye', 'confirmPwd')
+
+    // 修改密码校验（与真实接口一致）
+    document.getElementById('savePwdBtn').addEventListener('click', () => {
+      const oldPwd = document.getElementById('oldPwd').value.trim()
+      const newPwd = document.getElementById('newPwd').value.trim()
+      const confirmPwd = document.getElementById('confirmPwd').value.trim()
+      const DEMO_OLD = 'elo@2026'
+      const msg = document.getElementById('pwdMsg')
+
+      const fail = text => {
+        msg.textContent = text
+        msg.className = 'form-msg error show'
+      }
+
+      if (oldPwd !== DEMO_OLD) {
+        fail('旧密码不正确（演示账号旧密码：elo@2026）')
+        return
+      }
+      if (!newPwd || newPwd.length < 8) {
+        fail('新密码至少需要 8 位')
+        return
+      }
+      if (newPwd === oldPwd) {
+        fail('新密码不能与旧密码相同')
+        return
+      }
+      if (newPwd !== confirmPwd) {
+        fail('两次输入的新密码不一致')
+        return
+      }
+
+      msg.textContent = '保存成功（演示）· 真实接口返回后当前会话会失效，需重新登录'
+      msg.className = 'form-msg ok show'
+      showToast('密码修改成功（演示）')
+      setTimeout(() => {
+        resetForm()
+        // 直接跳转到你的登录页，不在原型里另做登录页
+        location.href = 'login-prototype.html'
+      }, 1000)
+    })
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      resetForm()
+      // 直接跳转到你的登录页
+      location.href = 'login-prototype.html'
+    })
+
+    // 支持 URL 参数 ?view=account 直接打开账号页（用于截图）
+    const initialView = new URLSearchParams(location.search).get('view')
+    if (initialView === 'account') {
+      showView(initialView)
+    }
+  </script>
+</body>
+</html>
