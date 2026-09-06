@@ -35,6 +35,7 @@
 │   ├── pages/                   # 页面（登录、注册、打卡、账号与安全、管理员等）
 │   ├── utils/request.js         # 统一请求封装（自动携带 Bearer token）
 │   ├── utils/api-config.js      # 后端接口地址配置
+│   ├── static/                  # 静态资源（App 图标等）
 │   ├── pages.json               # 页面路由
 │   └── manifest.json            # 多端应用配置
 ├── server/                      # Node 后端
@@ -121,7 +122,14 @@ npm run build:mp-weixin
 npx uni build -p app
 ```
 
-在 HBuilderX 导入 `dist/build/app`，确认 manifest（名称 / DCloud AppID / 版本号），执行“发行 → 原生App-云打包”。
+在 HBuilderX 导入 `dist/build/app`，确认 manifest（名称 / DCloud AppID / 版本号 / App 图标），执行“发行 → 原生App-云打包”。
+
+App 图标（E + 打勾 设计稿）已配置在 `src/manifest.json` → `app-plus.distribute.icons.android`，对应多分辨率图标文件：
+
+- 源图：`src/static/app-icon-final.png`（1024×1024）
+- 打包用图：`src/static/app-icon-48/72/96/144/192.png`（Android mdpi → xxxhdpi）
+
+更换图标时，替换以上文件或在 HBuilderX 可视化界面中重新选择即可。
 
 ---
 
@@ -152,6 +160,6 @@ npx uni build -p app
 ## 版本
 
 - `v1.0.0`：微信小程序体验版首发，Sealos 后端 + Android APK
-- `v1.0.1`：记住密码、账号与安全页、修改/退出、管理员查看 / 重置 / 删除用户
+- `v1.0.1`：记住密码、账号与安全页、修改/退出、管理员查看 / 重置 / 删除用户、App 正式图标（E + 打勾）
 
 详细项目笔记与发布流程复盘见 [PROJECT.md](PROJECT.md)。

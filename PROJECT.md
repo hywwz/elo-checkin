@@ -16,11 +16,11 @@
 
 | 项目 | 状态 | 地址/说明 |
 | --- | --- | --- |
-| GitHub 仓库 | ✅ v1.0.1 代码已推送 | https://github.com/hywwz/elo-checkin |
+| GitHub 仓库 | ✅ v1.0.1 代码已推送 | https://github.com/hywwz/elo-checkin（master / 标签 v1.0.1 = `5d2a4b4`） |
 | 后端（Sealos） | ✅ 运行中（v1.0.1 镜像） | https://cywspqlnlffd.cloud.sealos.io |
 | 微信小程序 | ✅ 体验版 1.0.1 | 已添加体验成员 |
-| Android App | ✅ APK 已打包（1.0.1） | `dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk` |
-| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.1：账号与安全 / 管理员 / 记住密码） |
+| Android App | ✅ APK 已打包（1.0.1）；新图标待云打包复核 | `dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk` |
+| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.1：账号与安全 / 管理员 / 记住密码 / 正式图标） |
 | 接口文档 | ✅ | [backend-api.md](backend-api.md) |
 
 ---
@@ -33,6 +33,7 @@
 - 管理员（默认账号：`测试1`）：用户列表、查看目标完成与打卡记录、重置密码、删除用户
 - 登录页“忘记密码”改为“联系项目管理员”提示
 - 后端新增 `/auth/change-password`、`/auth/logout` 与管理员接口
+- App 正式图标：采用 E + 打勾 设计稿（源图 a5ea，1024×1024），生成 Android 各分辨率图标并写入 manifest
 
 ---
 
@@ -56,7 +57,7 @@ src/
 ├─ utils/
 │  ├─ request.js   统一请求封装
 │  └─ api-config.js  接口地址配置（当前指向 Sealos）
-├─ static/         静态资源
+├─ static/         静态资源（含 App 图标 `app-icon-*.png`）
 ├─ pages.json      页面路由
 ├─ manifest.json   多端配置
 └─ App.vue / main.js
@@ -206,6 +207,30 @@ npx uni build -p app
 
 ---
 
+### 6.6 App 图标配置（E + 打勾，a5ea 源图）
+
+```text
+C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿）
+→ 居中裁方并放大为 src/static/app-icon-final.png（1024×1024）
+→ 缩放为 Android 五个分辨率：48 / 72 / 96 / 144 / 192
+→ src/manifest.json → app-plus.distribute.icons.android 引用上述文件
+→ npx uni build -p app → HBuilderX 导入 dist/build/app → 云打包
+```
+
+图标映射：
+
+| Android 档位 | 分辨率 | manifest 键 | 文件 |
+| --- | --- | --- | --- |
+| mdpi | 48×48 | `mdpi` | `src/static/app-icon-48.png` |
+| hdpi | 72×72 | `hdpi` | `src/static/app-icon-72.png` |
+| xhdpi | 96×96 | `xhdpi` | `src/static/app-icon-96.png` |
+| xxhdpi | 144×144 | `xxhdpi` | `src/static/app-icon-144.png` |
+| xxxhdpi | 192×192 | `xxxhdpi` | `src/static/app-icon-192.png` |
+
+注意：只重新 `npx uni build -p app` 不会自动换图标，必须先在 `src/manifest.json` 中写入 `icons` 配置再编译，HBuilderX 云打包才会使用新图。源码目录中还保留了历史过程稿 `app-icon.png`（E 字版）、`app-icon-check.png`（打勾版）、`app-icon-echeck.png`（E + 勾预览版）与根目录 `app-icon-preview.png` 对比图，均未删除。
+
+---
+
 ## 7. 知识笔记
 
 ### 7.1 uni-app 一套代码出多端
@@ -340,7 +365,8 @@ git push
 ## 10. 待办与未来方向
 
 - [ ] 每日提醒目前只保存了"提醒时间"，系统级通知推送尚未接入
-- [ ] App 正式图标 / 启动图细化（当前打包已可用）
+- [x] App 正式图标（E + 打勾，已在 manifest 配置多分辨率）
+- [ ] App 启动图细化（当前使用默认启动图）
 - [ ] iOS 打包需要苹果开发者账号（年费），暂缓
 - [ ] 若要正式发布：正式域名 + ICP 备案 + 微信合法域名配置
 - [ ] 后端数据备份与清理机制
