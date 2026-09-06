@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { db, nowIso } from './db.js'
 
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000
-const ADMIN_ACCOUNTS = String(process.env.ADMIN_ACCOUNTS || 'design@elo.cn')
+const ADMIN_ACCOUNTS = String(process.env.ADMIN_ACCOUNTS || '测试1')
   .split(',')
   .map(s => s.trim().toLowerCase())
   .filter(Boolean)
