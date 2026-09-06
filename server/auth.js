@@ -15,6 +15,45 @@ export function verifyPassword(password, stored) {
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(candidate, 'hex'))
 }
 
+export function changePassword(userId, oldPassword, newPassword) {
+  const user = db
+    .prepare('SELECT password_hash FROM users WHERE id = ?')
+    .get(userId)
+  if (!user) {
+    const err = new Error('用户不存在')
+    err.status = 404
+    err.code = 10001
+    err.expose = true
+    throw err
+  }
+  if (!verifyPassword(oldPassword, user.password_hash)) {
+    const err = new Error('旧密码错误')
+    err.status = 400
+    err.code = 10004
+    err.expose = true
+    throw err
+  }
+  if (oldPassword === newPassword) {
+    const err = new Error('新密码不能与旧密码相同')
+    err.status = 400
+    err.code = 10004
+    err.expose = true
+    throw err
+  }
+
+  const passwordHash = hashPassword(newPassword)
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(
+    passwordHash,
+    userId
+  )
+  // 踢掉该用户全部已登录会话，强制使用新密码重新登录
+  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
+}
+
+export function revokeSession(token) {
+  db.prepare('DELETE FROM sessions WHERE token = ?').run(token)
+}
+
 export function createSession(userId) {
   const token = crypto.randomBytes(32).toString('hex')
   const expiresAt = new Date(Date.now() + TOKEN_TTL_MS).toISOString()

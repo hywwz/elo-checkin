@@ -4,7 +4,9 @@ import { db, nowIso } from './db.js'
 import {
   hashPassword,
   verifyPassword,
+  changePassword,
   createSession,
+  revokeSession,
   publicUser,
   findUserByToken,
   cleanupExpiredSessions
@@ -117,6 +119,34 @@ async function handleAuthLogin(req, res) {
   })
 }
 
+async function handleChangePassword(req, res, user) {
+  const body = await readBody(req)
+  const oldPassword = String(body.oldPassword || '')
+  const newPassword = String(body.newPassword || '')
+  if (!oldPassword || !newPassword) {
+    return send(res, 400, 10004, '请输入旧密码和新密码')
+  }
+  if (newPassword.length < 8) {
+    return send(res, 400, 10004, '新密码长度至少为 8 位')
+  }
+  try {
+    changePassword(user.id, oldPassword, newPassword)
+  } catch (err) {
+    if (err.expose) {
+      return send(res, err.status || 400, err.code || 10004, err.message)
+    }
+    throw err
+  }
+  return send(res, 200, 0, '密码修改成功，请重新登录', {
+    forceRelogin: true
+  })
+}
+
+async function handleLogout(req, res, token) {
+  revokeSession(token)
+  return send(res, 200, 0, '已退出登录')
+}
+
 async function handleUsersMe(req, res, token) {
   const user = findUserByToken(token)
   if (!user) {
@@ -152,6 +182,17 @@ async function route(req, res) {
   const token = bearerToken(req)
   if (!token) {
     return send(res, 401, 10001, '请先登录')
+  }
+
+  if (path === '/v1/auth/logout' && req.method === 'POST') {
+    return handleLogout(req, res, token)
+  }
+  if (path === '/v1/auth/change-password' && req.method === 'POST') {
+    const user = findUserByToken(token)
+    if (!user) {
+      return send(res, 401, 10001, '登录已失效，请重新登录')
+    }
+    return handleChangePassword(req, res, user)
   }
 
   if (path === '/v1/users/me' && req.method === 'GET') {
