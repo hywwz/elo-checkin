@@ -16,11 +16,11 @@
 
 | 项目 | 状态 | 地址/说明 |
 | --- | --- | --- |
-| GitHub 仓库 | ✅ v1.0.1 代码已推送 | https://github.com/hywwz/elo-checkin（master / 标签 v1.0.1 = `5d2a4b4`） |
+| GitHub 仓库 | ✅ v1.0.1 代码已推送 | https://github.com/hywwz/elo-checkin（master / 标签 v1.0.1 = `5de1470`） |
 | 后端（Sealos） | ✅ 运行中（v1.0.1 镜像） | https://cywspqlnlffd.cloud.sealos.io |
 | 微信小程序 | ✅ 体验版 1.0.1 | 已添加体验成员 |
 | Android App | ✅ APK 已打包（1.0.1）；新图标待云打包复核 | `dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk` |
-| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.1：账号与安全 / 管理员 / 记住密码 / 正式图标） |
+| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.1：账号与安全 / 管理员 / 记住密码 / 正式图标 / App 内更新检查） |
 | 接口文档 | ✅ | [backend-api.md](backend-api.md) |
 
 ---
@@ -34,6 +34,7 @@
 - 登录页“忘记密码”改为“联系项目管理员”提示
 - 后端新增 `/auth/change-password`、`/auth/logout` 与管理员接口
 - App 正式图标：采用 E + 打勾 设计稿（源图 a5ea，1024×1024），生成 Android 各分辨率图标并写入 manifest
+- App 内更新检查：后端 `GET /app/update` 返回最新版本与下载地址，App 启动时自动检测新版并引导下载
 
 ---
 
@@ -137,6 +138,7 @@ src/
 | GET | `/v1/admin/users/{id}/records` | 管理员：查看用户目标与打卡记录 |
 | POST | `/v1/admin/users/{id}/reset-password` | 管理员：重置密码并生成临时密码 |
 | DELETE | `/v1/admin/users/{id}/delete` | 管理员：删除用户（级联清理） |
+| GET | `/v1/app/update` | App 更新检查：返回最新版本 / APK 下载地址 / 更新说明（无需登录） |
 | GET | `/v1/health` | 健康检查 |
 
 ---
@@ -235,6 +237,35 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
 
 ---
 
+### 6.7 App 更新分发与发新版流程（更新检查）
+
+**实现方式（A 档：应用内提示下载，不做静默安装）**
+
+- 后端提供 `GET /v1/app/update`（无需登录），返回 `{ latestVersion, downloadUrl, releaseNotes }`；
+- App 端打卡主页登录后自动静默检查一次：后端版本号高于本机版本时弹窗提示，点“立即更新”用系统浏览器打开 APK 下载地址；
+- 更新配置集中在 `server/app-update.js`，发新版时只需修改该文件；
+- 说明：Android 不允许应用静默安装 APK，最后一步仍需用户点系统安装框；当前 latestVersion=1.0.1 与现网一致，因此不会误弹更新。
+
+**以后每发一次新版，按此流程操作：**
+
+```text
+1. HBuilderX 云打包得到新 APK（dist/build/app/unpackage/release/apk/...）
+2. GitHub Releases 新建 Release（tag 如 v1.0.2），把 APK 作为附件上传
+3. 修改两处版本号并推送：
+   - server/app-update.js：latestVersion 改为新版号，downloadUrl 填 Release 附件地址
+   - src/manifest.json：versionName / versionCode 同步升级
+4. GitHub Actions 自动重建后端镜像 → Sealos 对 elo-backend 执行“变更 → 保存”
+5. 旧版 App 用户打开后自动收到更新提示 → 点击下载安装
+```
+
+Release 附件下载地址形如：
+
+```text
+https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/xxx.apk
+```
+
+---
+
 ## 7. 知识笔记
 
 ### 7.1 uni-app 一套代码出多端
@@ -282,7 +313,7 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
 | `v0.2.0` | `0a3ddc3` | 前后端联调 | 注册 / 登录 / 目标 / 打卡 / 统计全链路接通真实后端 |
 | `v0.2.1` | `fbe5dd0` | 发版前清理 | 删除前端 Mock 假数据，后端接口地址统一配置 |
 | `v1.0.0` | `2062c0e` | 首发 | 微信小程序体验版 + Sealos 后端 + Android APK |
-| `v1.0.1` | 当前 master 头部（跟随 master） | 当前迭代 | 记住密码 / 账号与安全 / 管理员 / 正式图标 / 文档 |
+| `v1.0.1` | `5de1470`（跟随 master） | 当前迭代 | 记住密码 / 账号与安全 / 管理员 / 正式图标 / 更新检查 / 文档 |
 
 约定：v0.x 是过程存档点，v1.x 才是对外版本；发布后若补文档等小改动，`v1.0.1` 会随 master 移动到最新提交，保证“打这个标签 = 拿到当前完整代码”。
 
