@@ -82,7 +82,7 @@ export default {
   data() {
     return {
       account: '',
-      password: 'elo@2026',
+      password: '',
       showPwd: false,
       rememberPwd: false,
       loading: false,
@@ -90,7 +90,7 @@ export default {
     }
   },
   onLoad() {
-    this.account = uni.getStorageSync('eloAccount') || 'design@elo.cn'
+    this.account = uni.getStorageSync('eloAccount') || ''
     const remembered = uni.getStorageSync('eloRememberPwd')
     this.rememberPwd = remembered === true || remembered === 'true'
     if (this.rememberPwd) {
