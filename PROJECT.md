@@ -12,15 +12,15 @@
 
 ---
 
-## 2. 当前状态（2026-09-06）
+## 2. 当前状态（2026-09-08）
 
 | 项目 | 状态 | 地址/说明 |
 | --- | --- | --- |
-| GitHub 仓库 | ✅ v1.0.1 已发布；master 继续开发（将作为 v1.0.2） | https://github.com/hywwz/elo-checkin |
-| 后端（Sealos） | ✅ 运行中（v1.0.1 镜像；含更新检查的镜像待拉取） | https://cywspqlnlffd.cloud.sealos.io |
-| 微信小程序 | ✅ 体验版 1.0.1 | 已添加体验成员 |
-| Android App | ⏳ 新资源（图标+更新检查）已编译就绪，等云打包 | DCloud 免费打包机 2026-09-06 已满额，次日重试；旧包 `dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk` |
-| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.2 开发中：更新检查优化 / 手动检查入口 / 版本统一 / 文档归档） |
+| GitHub 仓库 | ✅ v1.0.3 已发布 | https://github.com/hywwz/elo-checkin |
+| 后端（Sealos） | ✅ 运行中，更新接口已上线 | https://cywspqlnlffd.cloud.sealos.io |
+| Android App | ✅ v1.0.3 正式发布（com.elo.checkin / targetSdk 34） | APK 与更新地址见下方 v1.0.3 摘要 |
+| 微信小程序 | ⏸ 不再继续开发，未来只做 Android App | 保留体验版 v1.0.1 |
+| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.3） |
 | 接口文档 | ✅ | [backend-api.md](backend-api.md) |
 
 ---
@@ -44,6 +44,42 @@
 - 根目录过程稿（原型 HTML / 图标对比图）归档到 `archive/`，主目录保持清爽
 - 发布约定：标签发布后不移动，后续改动用新版本号推进
 - 新增新手文档：部署全流程解析 `DEPLOY-GUIDE.md`、模板框架提炼 `TEMPLATE-GUIDE.md`
+
+### v1.0.2 / v1.0.3 发布摘要（2026-09-08）
+
+- 正式 App 改为源码工程 + DCloud AppID `__UNI__19AE649` 云打包，Android 包名 `com.elo.checkin`，targetSdkVersion 34
+- 自研本地定时通知 UTS 插件 `elo-notify`：立即通知 / 指定时间通知 / 取消 / 权限检查 / 跳转系统设置
+- 三类系统提醒接入 App：按时提醒（按目标提醒时间）、风险提醒（当天 22:00 未打卡）、成就提醒（连续 7 / 30 / 100 / 365 天）
+- “账号与安全”新增「系统提醒」开关：风险提醒、成就提醒可独立关闭
+- 打卡主页每次加载/打卡后自动重排未来 30 天提醒（最多 450 条闹钟，避免超过系统上限）
+- v1.0.3 修复：
+  - 提醒时间改为系统原生双列滚轮（不再出现滚轮对不准、需手动对准绿框的问题）
+  - 目标名称 / 具体任务输入框补 `box-sizing: border-box`，与下方频率、时间框对齐
+  - “账号与安全”页「退出登录」与上方卡片拉开间距（`margin-top: 44rpx`）
+  - “检查更新”在接口异常时提示“后端更新服务尚未生效”；下版增加“当前已是最新版本”反馈
+
+### 2026-09-08 踩坑记录与解决方案
+
+| # | 问题现象 | 根因 | 解决方案 |
+| --- | --- | --- | --- |
+| 1 | UTS 插件云打包 Kotlin 编译失败 | `BroadcastReceiver` 子类缺少显式 `super()`；权限写法需用 UTS 数组字面量 | 补构造方法；权限改 `[Manifest.permission.POST_NOTIFICATIONS]` |
+| 2 | 请求通知权限报 targetSdk 必须 ≥33 | 旧自定义基座 targetSdk=28 | `requestNotificationPermission` 增加 targetSdk<33 直接按已开启处理；正式包 targetSdkVersion=34 |
+| 3 | 通知发不出来：`no valid small icon` | 通知没设置小图标 | `builder.setSmallIcon(context.getApplicationInfo().icon)` |
+| 4 | 提醒通知被勿扰降级成静默进通知栏 | 通知没有 REMINDER 类别 | `builder.setCategory(Notification.CATEGORY_REMINDER)` |
+| 5 | 小米退后台/杀进程后不提醒，打开 App 才补发 | 日志出现 `GrezeManager: cached alarm!`，MIUI 冻结闹钟；与“允许闹钟和提醒”无关 | 用户在小米应用管理开启「自启动」+「省电策略＝无限制」；开发期另用 `cmd appops set ... SCHEDULE_EXACT_ALARM allow` |
+| 6 | 云打包总是 4 条“文件不存在” | 仓库入口为 `src/`，图标路径按项目根校验 | 根目录建 `static -> src/static` Junction（本机工作区专用，不提交）；不要用旧 AppID `H5680A95B` 工程打包 |
+| 7 | 正式包“检查更新”报失败 | 线上 Sealos 跑的是旧镜像，`/v1/app/update` 未公开 | push 触发 GitHub Actions 重建镜像 → Sealos 手动“更新/保存”；`/v1/app/update` 恢复 200 |
+| 8 | 原生时间滚轮不对中、不自动锁定 | 自定义 `picker-view` + 绿框与系统吸附位置不一致 | 改为系统原生 `<picker mode="multiSelector">` 双列滚轮，吸附由系统保证 |
+| 9 | 目标输入框与下方框宽度不一致 | `width:100%` + padding 未声明 border-box | 输入框补 `box-sizing: border-box` |
+| 10 | 安装 APK 报 `INSTALL_FAILED_USER_RESTRICTED` | 小米拦截 USB/未知来源安装 | 手机端允许安装弹窗，并开启「USB 安装」 |
+
+### 需要补充/仍待处理
+
+- 已提交但未打进 v1.0.3：手动检查更新显示“当前已是最新版本”提示（下个版本随包生效）
+- 重启手机后本地闹钟不会自动恢复，用户打开一次 App 后会重新排布；如需“重启后自动恢复”要新增 `BOOT_COMPLETED` 处理
+- 每周弹性（count）目标：本周未满次数前每天提醒，满次数后当天停止；如觉得频繁可再调
+- 提醒目前只做 Android；iOS 需开发者账号，暂缓
+- App 内“一键申请通知权限”尚未做，目前需用户到系统设置开启（说明见 `INSTALL-GUIDE.md`）
 
 ---
 
@@ -224,7 +260,9 @@ npx uni build -p app
 → Submit，2~5 分钟出 APK
 ```
 
-当前 APK：`dist/build/app/unpackage/release/apk/H5680A95B__20260906191429.apk`（v1.0.1）
+当前 APK：`dist/release/elo-checkin-v1.0.3.apk`（v1.0.3，云打包产物下载保存位置）
+
+安装与分发说明：见 [INSTALL-GUIDE.md](INSTALL-GUIDE.md)
 
 ---
 
@@ -455,7 +493,7 @@ git push
 
 ## 10. 待办与未来方向
 
-- [ ] 每日提醒目前只保存了"提醒时间"，系统级通知推送尚未接入
+- [x] 系统级本地通知已接入（按时 / 风险 / 成就三类提醒，Android）
 - [x] App 正式图标（E + 打勾，已在 manifest 配置多分辨率）
 - [ ] App 启动图细化（当前使用默认启动图）
 - [ ] iOS 打包需要苹果开发者账号（年费），暂缓
