@@ -11,6 +11,7 @@ import {
 // #endif
 
 const HORIZON_DAYS = 30
+const MAX_ALARMS = 450
 const RISK_HOUR = 22
 const RISK_MINUTE = 0
 const RISK_CHANNEL = { channelId: 'elo_reminder', channelName: '打卡提醒' }
@@ -180,13 +181,19 @@ export function syncReminders(goals) {
       }
 
       for (const item of items) {
+        if (pending.length >= MAX_ALARMS) continue
         const id = 100000 + pending.length + 1
-        const scheduledId = scheduleNotification({
-          id,
-          ...item,
-          exact,
-          ...RISK_CHANNEL
-        })
+        let scheduledId = -1
+        try {
+          scheduledId = scheduleNotification({
+            id,
+            ...item,
+            exact,
+            ...RISK_CHANNEL
+          })
+        } catch (err) {
+          scheduledId = -1
+        }
         if (scheduledId > 0) {
           pending.push({ id, goalId: goal.id, kind: item.kind, triggerAt: item.triggerAt })
         }
