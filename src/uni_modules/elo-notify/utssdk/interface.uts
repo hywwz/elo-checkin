@@ -1,0 +1,52 @@
+/**
+ * 通知参数。
+ */
+export type EloNotifyOptions = {
+	/** 通知 ID，相同 ID 会覆盖或取消同一通知。 */
+	id : number
+	/** 通知标题。 */
+	title : string
+	/** 通知正文。 */
+	content : string
+	/** Android 通知渠道 ID；iOS 暂保留。 */
+	channelId ?: string
+	/** Android 通知渠道名称；iOS 暂保留。 */
+	channelName ?: string
+	/** 触发时间：毫秒时间戳；立即通知时忽略。 */
+	triggerAt ?: number
+	/** Android 是否要求精确到秒的定时；Android 12+ 需要“闹钟和提醒”权限。 */
+	exact ?: boolean
+}
+
+/** 通知权限申请成功回调。 */
+export type EloPermissionSuccess = (allRight : boolean) => void
+
+/** 通知权限申请失败回调。 */
+export type EloPermissionFail = (doNotAskAgain : boolean) => void
+
+/** 立即发送一条通知，成功返回 ID，失败返回 -1。 */
+export type EloShowNotification = (options : EloNotifyOptions) => number
+
+/** 安排一条定时通知，成功返回 ID，失败返回 -1。 */
+export type EloScheduleNotification = (options : EloNotifyOptions) => number
+
+/** 取消指定 ID 的定时通知并清除已展示的同 ID 通知。 */
+export type EloCancelScheduledNotification = (id : number) => void
+
+/** 申请通知权限。 */
+export type EloRequestNotificationPermission = (
+	success ?: EloPermissionSuccess,
+	fail ?: EloPermissionFail
+) => void
+
+/** 检查应用通知是否可用。 */
+export type EloIsNotificationEnabled = () => boolean
+
+/** 检查 Android 精确定时权限是否可用；非 Android 平台返回安全默认值。 */
+export type EloIsExactAlarmEnabled = () => boolean
+
+/** 打开系统通知设置页。 */
+export type EloOpenNotificationSettings = () => void
+
+/** 打开 Android“闹钟和提醒”权限设置页。 */
+export type EloOpenExactAlarmSettings = () => void

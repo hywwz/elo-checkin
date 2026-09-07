@@ -1,0 +1,48 @@
+import {
+	EloNotifyOptions,
+	EloPermissionSuccess,
+	EloPermissionFail,
+	EloShowNotification,
+	EloScheduleNotification,
+	EloCancelScheduledNotification,
+	EloRequestNotificationPermission,
+	EloIsNotificationEnabled,
+	EloIsExactAlarmEnabled,
+	EloOpenNotificationSettings,
+	EloOpenExactAlarmSettings
+} from '../interface.uts'
+
+// iOS 原生实现待 Mac 真机环境接入；当前提供与 Android 一致的占位 API，
+// 避免 uni-app 编译 iOS 时因缺失导出而报错。
+
+export const showNotification : EloShowNotification = function (_options : EloNotifyOptions) : number {
+	return -1
+}
+
+export const scheduleNotification : EloScheduleNotification = function (_options : EloNotifyOptions) : number {
+	return -1
+}
+
+export const cancelScheduledNotification : EloCancelScheduledNotification = function (_id : number) : void {
+}
+
+export const requestNotificationPermission : EloRequestNotificationPermission = function (
+	success ?: EloPermissionSuccess,
+	fail ?: EloPermissionFail
+) : void {
+	fail?.(false)
+}
+
+export const isNotificationEnabled : EloIsNotificationEnabled = function () : boolean {
+	return false
+}
+
+export const isExactAlarmEnabled : EloIsExactAlarmEnabled = function () : boolean {
+	return true
+}
+
+export const openNotificationSettings : EloOpenNotificationSettings = function () : void {
+}
+
+export const openExactAlarmSettings : EloOpenExactAlarmSettings = function () : void {
+}

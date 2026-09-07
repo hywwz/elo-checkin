@@ -1,0 +1,238 @@
+import Build from 'android.os.Build'
+import Context from 'android.content.Context'
+import Intent from 'android.content.Intent'
+import PendingIntent from 'android.app.PendingIntent'
+import AlarmManager from 'android.app.AlarmManager'
+import NotificationManager from 'android.app.NotificationManager'
+import Manifest from 'android.Manifest'
+import PackageManager from 'android.content.pm.PackageManager'
+import Uri from 'android.net.Uri'
+import Settings from 'android.provider.Settings'
+import { AlarmReceiver, showNotificationByReceiver } from './AlarmReceiver.uts'
+import {
+	EloNotifyOptions,
+	EloPermissionSuccess,
+	EloPermissionFail,
+	EloShowNotification,
+	EloScheduleNotification,
+	EloCancelScheduledNotification,
+	EloRequestNotificationPermission,
+	EloIsNotificationEnabled,
+	EloIsExactAlarmEnabled,
+	EloOpenNotificationSettings,
+	EloOpenExactAlarmSettings
+} from '../interface.uts'
+
+/** 接收器必须随插件模块导出，打包时才会被编译进 APK。 */
+export { AlarmReceiver } from './AlarmReceiver.uts'
+
+/** 接收器完整类名，与 AndroidManifest.xml 保持一致。 */
+const ALARM_RECEIVER_CLASS = 'uts.sdk.modules.eloNotify.AlarmReceiver'
+const DEFAULT_CHANNEL_ID = 'elo_reminder'
+const DEFAULT_CHANNEL_NAME = '打卡提醒'
+
+/**
+ * 立即发送一条通知。
+ */
+export const showNotification : EloShowNotification = function (options : EloNotifyOptions) : number {
+	const context = getContext()
+	if (context == null) {
+		return -1
+	}
+	return showNotificationByReceiver(
+		context,
+		options.id.toInt(),
+		options.title,
+		options.content,
+		options.channelId ?? DEFAULT_CHANNEL_ID,
+		options.channelName ?? DEFAULT_CHANNEL_NAME
+	)
+}
+
+/**
+ * 安排一条系统级定时通知。
+ * App 进程被系统杀掉后，到达时间仍由 AlarmManager 触发。
+ */
+export const scheduleNotification : EloScheduleNotification = function (options : EloNotifyOptions) : number {
+	const context = getContext()
+	if (context == null) {
+		return -1
+	}
+	const id = options.id.toInt()
+	const triggerAt = options.triggerAt
+	if (id <= 0 || options.title.length == 0 || triggerAt == null || triggerAt <= 0) {
+		return -1
+	}
+	const exact = options.exact ?? true
+	const alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && exact && !alarmManager.canScheduleExactAlarms()) {
+		// Android 12+ 未授权“闹钟和提醒”时，直接告知业务层失败，由页面引导去系统设置开启。
+		return -1
+	}
+	const intent = new Intent()
+	intent.setClassName(context.getPackageName(), ALARM_RECEIVER_CLASS)
+	intent.putExtra('id', id)
+	intent.putExtra('title', options.title)
+	intent.putExtra('content', options.content)
+	intent.putExtra('channelId', options.channelId ?? DEFAULT_CHANNEL_ID)
+	intent.putExtra('channelName', options.channelName ?? DEFAULT_CHANNEL_NAME)
+	const pendingIntent = PendingIntent.getBroadcast(
+		context,
+		id,
+		intent,
+		PendingIntent.FLAG_UPDATE_CURRENT + PendingIntent.FLAG_IMMUTABLE
+	)
+	notifyScheduled(
+		alarmManager,
+		triggerAt.toLong(),
+		pendingIntent,
+		exact
+	)
+	return id
+}
+
+/**
+ * 取消定时通知。
+ */
+export const cancelScheduledNotification : EloCancelScheduledNotification = function (id : number) : void {
+	const context = getContext()
+	if (context == null) {
+		return
+	}
+	const alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+	const intent = new Intent()
+	intent.setClassName(context.getPackageName(), ALARM_RECEIVER_CLASS)
+	const pendingIntent = PendingIntent.getBroadcast(
+		context,
+		id.toInt(),
+		intent,
+		PendingIntent.FLAG_NO_CREATE + PendingIntent.FLAG_IMMUTABLE
+	)
+	if (pendingIntent != null) {
+		alarmManager.cancel(pendingIntent)
+	}
+	const notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+	notificationManager.cancel(id.toInt())
+}
+
+/**
+ * 申请通知权限（Android 13+ 会弹系统授权框）。
+ */
+export const requestNotificationPermission : EloRequestNotificationPermission = function (
+	success ?: EloPermissionSuccess,
+	fail ?: EloPermissionFail
+) : void {
+	const activity = UTSAndroid.getUniActivity()
+	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+		if (activity == null) {
+			fail?.(false)
+			return
+		}
+		UTSAndroid.requestSystemPermission(
+			activity,
+			arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+			(_allRight : boolean, _grantedList : Array<string>) => {
+				success?.(_allRight)
+			},
+			(doNotAskAgain : boolean, _grantedList : Array<string>) => {
+				fail?.(doNotAskAgain)
+			}
+		)
+		return
+	}
+	success?.(true)
+}
+
+/**
+ * 检查通知权限。
+ */
+export const isNotificationEnabled : EloIsNotificationEnabled = function () : boolean {
+	const context = getContext()
+	if (context == null) {
+		return false
+	}
+	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+		return context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+	}
+	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+		const notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+		return notificationManager.areNotificationsEnabled()
+	}
+	return true
+}
+
+/**
+ * 检查 Android 精确闹钟权限。
+ */
+export const isExactAlarmEnabled : EloIsExactAlarmEnabled = function () : boolean {
+	const context = getContext()
+	if (context == null) {
+		return false
+	}
+	if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+		return true
+	}
+	const alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+	return alarmManager.canScheduleExactAlarms()
+}
+
+/**
+ * 打开应用通知设置页。
+ */
+export const openNotificationSettings : EloOpenNotificationSettings = function () : void {
+	const context = getContext()
+	if (context == null) {
+		return
+	}
+	try {
+		const intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+		intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.getPackageName())
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+		context.startActivity(intent)
+	} catch (e : Exception) {
+		e.printStackTrace()
+	}
+}
+
+/**
+ * 打开 Android“闹钟和提醒”权限设置页。
+ */
+export const openExactAlarmSettings : EloOpenExactAlarmSettings = function () : void {
+	const context = getContext()
+	if (context == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+		return
+	}
+	try {
+		const intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+		intent.setData(Uri.parse('package:' + context.getPackageName()))
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+		context.startActivity(intent)
+	} catch (e : Exception) {
+		e.printStackTrace()
+	}
+}
+
+function getContext() : Context | null {
+	return UTSAndroid.getAppContext() as Context | null
+}
+
+function notifyScheduled(
+	alarmManager : AlarmManager,
+	triggerAt : Long,
+	pendingIntent : PendingIntent,
+	exact : boolean
+) : void {
+	if (exact) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+			alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+			return
+		}
+		alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+		return
+	}
+	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+		alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+		return
+	}
+	alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent)
+}

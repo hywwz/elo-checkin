@@ -1,0 +1,63 @@
+import Build from 'android.os.Build'
+import Context from 'android.content.Context'
+import BroadcastReceiver from 'android.content.BroadcastReceiver'
+import Intent from 'android.content.Intent'
+import Notification from 'android.app.Notification'
+import NotificationChannel from 'android.app.NotificationChannel'
+import NotificationManager from 'android.app.NotificationManager'
+
+/** 默认通知渠道。 */
+const ELO_DEFAULT_CHANNEL_ID = 'elo_reminder'
+const ELO_DEFAULT_CHANNEL_NAME = '打卡提醒'
+
+/**
+ * 系统闹钟到点后由系统拉起该接收器，在后台直接展示通知。
+ */
+export class AlarmReceiver extends BroadcastReceiver {
+
+	override onReceive(context : Context, intent : Intent) : void {
+		const id = intent.getIntExtra('id', 0)
+		const title = intent.getStringExtra('title') ?? '提醒'
+		const content = intent.getStringExtra('content') ?? ''
+		const channelId = intent.getStringExtra('channelId') ?? ELO_DEFAULT_CHANNEL_ID
+		const channelName = intent.getStringExtra('channelName') ?? ELO_DEFAULT_CHANNEL_NAME
+		showNotificationByReceiver(context, id, title, content, channelId, channelName)
+	}
+}
+
+/**
+ * 创建通知渠道并展示通知。
+ * index.uts 的立即通知与系统定时触发共用本函数，避免重复逻辑。
+ */
+export function showNotificationByReceiver(
+	context : Context,
+	id : Int,
+	title : string,
+	content : string,
+	channelId : string,
+	channelName : string
+) : Int {
+	if (id <= 0 || content.length == 0) {
+		return -1
+	}
+	const notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+		const channel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+		notificationManager.createNotificationChannel(channel)
+	}
+	const builder = createBuilder(context, channelId)
+	builder.setContentTitle(title)
+	builder.setContentText(content)
+	builder.setAutoCancel(true)
+	builder.setPriority(Notification.PRIORITY_HIGH)
+	notificationManager.notify(id, builder.build())
+	return id
+}
+
+@Suppress("DEPRECATION")
+function createBuilder(context : Context, channelId : string) : Notification.Builder {
+	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+		return new Notification.Builder(context, channelId)
+	}
+	return new Notification.Builder(context)
+}
