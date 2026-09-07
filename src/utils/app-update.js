@@ -42,9 +42,20 @@ function requestUpdateInfo() {
   })
 }
 
-function promptUpdate(info) {
+function promptUpdate(info, showNoNew = false) {
   const latest = info.latestVersion
-  if (!latest || !isNewerVersion(latest, APP_VERSION)) return
+  if (!latest) {
+    if (showNoNew) {
+      uni.showToast({ title: '当前已是最新版本', icon: 'none' })
+    }
+    return
+  }
+  if (!isNewerVersion(latest, APP_VERSION)) {
+    if (showNoNew) {
+      uni.showToast({ title: '当前已是最新版本', icon: 'none' })
+    }
+    return
+  }
   uni.showModal({
     title: `发现新版本 v${latest}`,
     content: info.releaseNotes || '有新版本可以更新，是否立即下载？',
@@ -82,7 +93,7 @@ export function checkForAppUpdate() {
 export function forceCheckForAppUpdate() {
   // #ifdef APP-PLUS
   requestUpdateInfo()
-    .then(promptUpdate)
+    .then(info => promptUpdate(info, true))
     .catch(err => {
       if (err && (err.statusCode === 401 || err.statusCode === 404)) {
         uni.showToast({
