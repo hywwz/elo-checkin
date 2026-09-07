@@ -13,6 +13,7 @@
 ## 文档导航（新手从这里开始）
 
 - [部署全流程解析（从零到上线，小白版）](DEPLOY-GUIDE.md)
+- [本地部署与给别人部署指南](LOCAL-DEPLOY.md)
 - [模板框架提炼（代码结构拆解，改功能指南）](TEMPLATE-GUIDE.md)
 - [项目笔记与发布复盘](PROJECT.md)
 - [后端接口文档](backend-api.md)

@@ -237,7 +237,7 @@ cd server && npm start      # 本地启动后端 → http://localhost:3000
 6. `server/app-update.js` + `src/utils/app-update.js` + `src/manifest.json`：三处版本号 + 下载地址同步换；
 7. 不需要系统提醒就删掉 `src/utils/reminder-scheduler.js` 与 `src/uni_modules/elo-notify/`，并把页面里的引用清掉；
 8. `.github/workflows/build-backend-image.yml`：把镜像名 `elo-backend` 换成你的项目名；
-9. README.md / PROJECT.md / backend-api.md / INSTALL-GUIDE.md：改成你的说明。
+9. README.md / PROJECT.md / DEPLOY-GUIDE.md / LOCAL-DEPLOY.md / INSTALL-GUIDE.md / backend-api.md：改成你的说明。
 
 > 提醒：模板里的数据库、路由、页面都是 elo 打卡的业务代码。最省力的迁移方式是**保留 `src/utils/`、`server/auth.js`、`server/index.js` 的路由骨架、`.github` 部署工作流**，业务表换成你自己的。
 

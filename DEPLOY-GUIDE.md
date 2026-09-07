@@ -150,6 +150,8 @@ git push -u origin master
 
 > Sealos 有时不会自动拉最新镜像，需要你手动触发一次"重新部署/拉取镜像"。
 
+> 如果不想用云服务器、只想自己电脑跑：看 [LOCAL-DEPLOY.md](LOCAL-DEPLOY.md)。
+
 ---
 
 ## 5. 微信小程序上线（⏸ 已停更，仅供历史参考）

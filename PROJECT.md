@@ -127,9 +127,11 @@ src/
 
 | 文档 | 面向谁 | 内容 |
 | --- | --- | --- |
-| [DEPLOY-GUIDE.md](DEPLOY-GUIDE.md) | 完全新手 | 从装软件到小程序/App/后端上线的每一步解析 |
+| [DEPLOY-GUIDE.md](DEPLOY-GUIDE.md) | 完全新手 | 从装软件到 Android App / 后端上线的每一步解析 |
+| [LOCAL-DEPLOY.md](LOCAL-DEPLOY.md) | 想本地自用/给别人部署的人 | 不花钱本地运行、局域网使用、远程给家人部署的思路与步骤 |
 | [TEMPLATE-GUIDE.md](TEMPLATE-GUIDE.md) | 想复用代码的人 | 前后端框架拆解、加功能路径、迁移新项目清单 |
 | [backend-api.md](backend-api.md) | 前端/接口对接 | 全部接口字段与示例 |
+| [INSTALL-GUIDE.md](INSTALL-GUIDE.md) | App 使用者 | 安装、权限、小米后台设置、常见问题 |
 | [README.md](README.md) | 所有人 | 项目介绍与快速入口 |
 
 ---
@@ -495,6 +497,7 @@ git push
 
 - [x] 系统级本地通知已接入（按时 / 风险 / 成就三类提醒，Android）
 - [x] App 正式图标（E + 打勾，已在 manifest 配置多分辨率）
+- [x] 本地自用 / 远程给他人部署说明（LOCAL-DEPLOY.md）
 - [ ] App 启动图细化（当前使用默认启动图）
 - [ ] iOS 打包需要苹果开发者账号（年费），暂缓
 - [ ] 若要正式发布：正式域名 + ICP 备案 + 微信合法域名配置
