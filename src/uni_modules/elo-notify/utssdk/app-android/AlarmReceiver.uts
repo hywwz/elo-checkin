@@ -53,6 +53,7 @@ export function showNotificationByReceiver(
 	builder.setSmallIcon(context.getApplicationInfo().icon)
 	builder.setContentTitle(title)
 	builder.setContentText(content)
+	builder.setCategory(Notification.CATEGORY_REMINDER)
 	builder.setAutoCancel(true)
 	builder.setPriority(Notification.PRIORITY_HIGH)
 	notificationManager.notify(id, builder.build())
