@@ -49,19 +49,19 @@
 
       <view class="field-group">
         <text class="label">提醒时间</text>
-        <view class="time-picker">
+        <view class="time-picker" @click="openTimePicker">
           <view class="t-col">
-            <view class="t-arrow" @click="adjustTime('hour', 1)">▲</view>
+            <view class="t-arrow">▲</view>
             <text class="t-value">{{ pad(tpHour) }}</text>
             <text class="t-unit">时</text>
-            <view class="t-arrow down" @click="adjustTime('hour', -1)">▼</view>
+            <view class="t-arrow down">▼</view>
           </view>
           <text class="t-colon">:</text>
           <view class="t-col">
-            <view class="t-arrow" @click="adjustTime('min', 1)">▲</view>
+            <view class="t-arrow">▲</view>
             <text class="t-value">{{ pad(tpMin) }}</text>
             <text class="t-unit">分</text>
-            <view class="t-arrow down" @click="adjustTime('min', -1)">▼</view>
+            <view class="t-arrow down">▼</view>
           </view>
         </view>
         <text class="tip">分钟可逐分调整，精确到任意时刻</text>
@@ -71,6 +71,44 @@
         <view v-if="loading" class="spinner"></view>
         <text>{{ loading ? '正在保存…' : '保存修改' }}</text>
       </button>
+    </view>
+
+    <view v-if="showTimeSheet" class="time-mask" @click="closeTimePicker">
+      <view class="time-sheet" @click.stop>
+        <view class="sheet-head">
+          <text class="sheet-action" @click.stop="closeTimePicker">取消</text>
+          <text class="sheet-title">提醒时间</text>
+          <text class="sheet-action done" @click.stop="confirmTime">确定</text>
+        </view>
+        <view class="sheet-wheel-area">
+          <view class="wheel-cell">
+            <view class="wheel-pill"></view>
+            <picker-view
+              class="wheel"
+              :value="[sheetHour]"
+              @change="e => onSheetChange('hour', e)"
+            >
+              <picker-view-column>
+                <view v-for="h in hourOptions" :key="h" class="wheel-item">{{ pad(h) }}</view>
+              </picker-view-column>
+            </picker-view>
+            <text class="wheel-unit">时</text>
+          </view>
+          <view class="wheel-cell">
+            <view class="wheel-pill"></view>
+            <picker-view
+              class="wheel"
+              :value="[sheetMin]"
+              @change="e => onSheetChange('min', e)"
+            >
+              <picker-view-column>
+                <view v-for="m in minuteOptions" :key="m" class="wheel-item">{{ pad(m) }}</view>
+              </picker-view-column>
+            </picker-view>
+            <text class="wheel-unit">分</text>
+          </view>
+        </view>
+      </view>
     </view>
   </view>
 </template>
@@ -87,6 +125,8 @@ export default {
       freqMode: 'daily',
       weeklyCount: 3,
       fixedDays: [],
+      hourOptions: Array.from({ length: 24 }, (_, i) => i),
+      minuteOptions: Array.from({ length: 60 }, (_, i) => i),
       weekOptions: [
         { label: '一', value: 1 },
         { label: '二', value: 2 },
@@ -98,6 +138,9 @@ export default {
       ],
       tpHour: 21,
       tpMin: 30,
+      showTimeSheet: false,
+      sheetHour: 21,
+      sheetMin: 30,
       loading: false,
       errors: {}
     }
@@ -154,11 +197,25 @@ export default {
     pad(n) {
       return String(n).padStart(2, '0')
     },
-    adjustTime(part, delta) {
-      if (part === 'hour') {
-        this.tpHour = (this.tpHour + delta + 24) % 24
-      } else {
-        this.tpMin = (this.tpMin + delta + 60) % 60
+    openTimePicker() {
+      this.sheetHour = this.tpHour
+      this.sheetMin = this.tpMin
+      this.showTimeSheet = true
+    },
+    closeTimePicker() {
+      this.showTimeSheet = false
+    },
+    confirmTime() {
+      this.tpHour = this.sheetHour
+      this.tpMin = this.sheetMin
+      this.showTimeSheet = false
+    },
+    onSheetChange(part, e) {
+      const value = Number(e.detail.value[0])
+      if (part === 'hour' && value >= 0 && value <= 23) {
+        this.sheetHour = value
+      } else if (part === 'min' && value >= 0 && value <= 59) {
+        this.sheetMin = value
       }
     },
     changeDays(delta) {
@@ -364,6 +421,9 @@ export default {
   align-items: center;
   justify-content: center;
 }
+.t-arrow.down {
+  margin-top: 2rpx;
+}
 .t-value {
   font-size: 56rpx;
   font-weight: 800;
@@ -382,6 +442,89 @@ export default {
   font-weight: 800;
   color: #C2CDDC;
   margin-top: -16rpx;
+}
+.time-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.time-sheet {
+  width: 750rpx;
+  background: #fff;
+  border-radius: 36rpx 36rpx 0 0;
+  padding-bottom: 40rpx;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26rpx 40rpx 16rpx;
+}
+.sheet-action {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #0B9D60;
+  padding: 8rpx;
+}
+.sheet-action.done {
+  font-weight: 800;
+}
+.sheet-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #243042;
+}
+.sheet-wheel-area {
+  display: flex;
+  justify-content: center;
+  gap: 32rpx;
+  padding: 0 40rpx 8rpx;
+}
+.wheel-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200rpx;
+}
+.wheel-pill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 96rpx;
+  transform: translateY(-50%);
+  background: #E8F9F0;
+  border-radius: 26rpx;
+  z-index: 0;
+}
+.wheel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 336rpx;
+}
+.wheel-item {
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  font-size: 52rpx;
+  font-weight: 800;
+  color: #1B2438;
+}
+.wheel-unit {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #A6B0C4;
+  letter-spacing: 4rpx;
 }
 .tip {
   display: block;

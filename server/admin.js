@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import { db } from './db.js'
-import { hashPassword, isAdminAccount } from './auth.js'
+import { hashPassword, isAdminAccount, revokeUserSessions } from './auth.js'
 
 function send(res, status, code, message, data = null) {
   const body = JSON.stringify({ code, message, data })
@@ -109,12 +109,21 @@ export function handleAdminResetPassword(req, res, userId) {
   const passwordHash = hashPassword(temporaryPassword)
   db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, userId)
   // 重置后让该用户所有登录会话失效，强制用临时密码重新登录
-  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
+  revokeUserSessions(userId, '密码已被管理员重置，请使用临时密码重新登录')
 
   return send(res, 200, 0, '重置成功，请把临时密码告知用户', {
     userId,
     temporaryPassword
   })
+}
+
+export function handleAdminForceLogout(req, res, userId) {
+  const user = findUser(userId)
+  if (!user) {
+    return send(res, 404, 10003, '用户不存在')
+  }
+  revokeUserSessions(userId, '账号已被管理员强制下线，请重新登录')
+  return send(res, 200, 0, '用户已强制下线', { userId })
 }
 
 export function handleAdminDeleteUser(req, res, userId) {
@@ -130,7 +139,7 @@ export function handleAdminDeleteUser(req, res, userId) {
 
   db.exec('BEGIN')
   try {
-    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
+    revokeUserSessions(userId, '账号已被管理员删除')
     db.prepare('DELETE FROM checkins WHERE user_id = ?').run(userId)
     db.prepare('DELETE FROM goals WHERE user_id = ?').run(userId)
     db.prepare('DELETE FROM users WHERE id = ?').run(userId)

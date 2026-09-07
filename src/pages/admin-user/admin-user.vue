@@ -55,6 +55,9 @@
           <text class="empty-title">该用户还没有打卡记录</text>
         </view>
 
+        <view class="kick-btn" :class="{ disabled: kicking }" @click="confirmKick">
+          <text>{{ kicking ? '正在下线…' : '强制下线该用户' }}</text>
+        </view>
         <view class="reset-btn" :class="{ disabled: resetting }" @click="confirmReset">
           <text>{{ resetting ? '正在重置…' : '重置该用户密码' }}</text>
         </view>
@@ -78,6 +81,7 @@ export default {
       goals: [],
       records: [],
       loading: true,
+      kicking: false,
       resetting: false,
       deleting: false
     }
@@ -123,6 +127,29 @@ export default {
         // 请求层已提示
       } finally {
         this.loading = false
+      }
+    },
+    confirmKick() {
+      uni.showModal({
+        title: '强制下线',
+        content: `确定让「${this.nickname}」立即下线吗？该用户下次操作会被打回登录页。`,
+        confirmText: '强制下线',
+        confirmColor: '#E5484D',
+        success: res => {
+          if (res.confirm) this.doKick()
+        }
+      })
+    },
+    async doKick() {
+      if (this.kicking) return
+      this.kicking = true
+      try {
+        await post(`/admin/users/${encodeURIComponent(this.userId)}/logout`)
+        uni.showToast({ title: '已强制下线', icon: 'success' })
+      } catch (err) {
+        // 请求层已提示
+      } finally {
+        this.kicking = false
       }
     },
     confirmReset() {
@@ -363,6 +390,23 @@ export default {
 .record-time {
   font-size: 19rpx;
   color: #A0AABE;
+}
+.kick-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 40rpx;
+  height: 92rpx;
+  border-radius: 30rpx;
+  background: #FFF8ED;
+  border: 2rpx solid #F6DFC3;
+  color: #B45309;
+  font-size: 25rpx;
+  font-weight: 800;
+  letter-spacing: 2rpx;
+}
+.kick-btn.disabled {
+  opacity: 0.7;
 }
 .reset-btn {
   display: flex;

@@ -28,6 +28,12 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 
+  CREATE TABLE IF NOT EXISTS kick_reasons (
+    token TEXT PRIMARY KEY,
+    reason TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS goals (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,

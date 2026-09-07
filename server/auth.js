@@ -51,11 +51,26 @@ export function changePassword(userId, oldPassword, newPassword) {
     userId
   )
   // 踢掉该用户全部已登录会话，强制使用新密码重新登录
-  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
+  revokeUserSessions(userId, '密码已修改，请重新登录')
 }
 
-export function revokeSession(token) {
+function writeKickReason(token, reason) {
+  db.prepare(
+    'INSERT OR REPLACE INTO kick_reasons (token, reason, created_at) VALUES (?, ?, ?)'
+  ).run(token, reason, nowIso())
+}
+
+export function revokeSession(token, reason = '已退出登录') {
+  writeKickReason(token, reason)
   db.prepare('DELETE FROM sessions WHERE token = ?').run(token)
+}
+
+export function revokeUserSessions(userId, reason) {
+  const rows = db.prepare('SELECT token FROM sessions WHERE user_id = ?').all(userId)
+  for (const row of rows) {
+    writeKickReason(row.token, reason)
+  }
+  db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
 }
 
 export function isAdminAccount(account) {
@@ -88,11 +103,45 @@ export function findUserByToken(token) {
       `SELECT u.id, u.account, u.nickname, u.created_at
        FROM sessions s
        JOIN users u ON u.id = s.user_id
-       WHERE s.token = ?`
+       WHERE s.token = ? AND s.expires_at > ?`
     )
-    .get(token)
+    .get(token, nowIso())
   if (!row) return null
   return row
+}
+
+export function authenticate(token) {
+  if (!token) {
+    return { message: '请先登录' }
+  }
+
+  const session = db
+    .prepare('SELECT token, user_id, expires_at FROM sessions WHERE token = ?')
+    .get(token)
+
+  if (!session) {
+    const kick = db
+      .prepare('SELECT reason FROM kick_reasons WHERE token = ?')
+      .get(token)
+    if (kick) {
+      db.prepare('DELETE FROM kick_reasons WHERE token = ?').run(token)
+      return { message: kick.reason }
+    }
+    return { message: '登录已失效，请重新登录' }
+  }
+
+  if (session.expires_at <= nowIso()) {
+    return { message: '登录已过期，请重新登录' }
+  }
+
+  const user = db
+    .prepare('SELECT id, account, nickname, created_at FROM users WHERE id = ?')
+    .get(session.user_id)
+  if (!user) {
+    db.prepare('DELETE FROM sessions WHERE token = ?').run(token)
+    return { message: '账号已被删除，请联系管理员' }
+  }
+  return { user }
 }
 
 export function cleanupExpiredSessions() {

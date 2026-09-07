@@ -9,8 +9,9 @@ function showError(message) {
   })
 }
 
-function request(method, url, data = {}) {
+function request(method, url, data = {}, options = {}) {
   return new Promise((resolve, reject) => {
+    const silent = options.silent === true
     const token = uni.getStorageSync('eloToken')
     uni.request({
       url: `${BASE_URL}${url}`,
@@ -31,13 +32,17 @@ function request(method, url, data = {}) {
         if (res.statusCode === 401) {
           uni.removeStorageSync('eloToken')
           uni.removeStorageSync('eloUser')
-          setTimeout(() => {
-            uni.reLaunch({ url: '/pages/login/login' })
-          }, 500)
+          if (!silent) {
+            setTimeout(() => {
+              uni.reLaunch({ url: '/pages/login/login' })
+            }, 500)
+          }
         }
         const error = new Error(message)
         error.code = body && body.code
-        showError(message)
+        if (!silent) {
+          showError(message)
+        }
         reject(error)
       },
       fail: err => {
@@ -45,25 +50,29 @@ function request(method, url, data = {}) {
           err.errMsg && err.errMsg.includes('timeout')
             ? '请求超时，请检查后端服务'
             : '无法连接服务器，请确认后端已启动'
-        showError(message)
-        reject(new Error(message))
+        if (!silent) {
+          showError(message)
+        }
+        const error = new Error(message)
+        error.offline = true
+        reject(error)
       }
     })
   })
 }
 
-export function get(url) {
-  return request('GET', url)
+export function get(url, options) {
+  return request('GET', url, {}, options)
 }
 
-export function post(url, data = {}) {
-  return request('POST', url, data)
+export function post(url, data = {}, options) {
+  return request('POST', url, data, options)
 }
 
-export function put(url, data = {}) {
-  return request('PUT', url, data)
+export function put(url, data = {}, options) {
+  return request('PUT', url, data, options)
 }
 
-export function del(url, data = {}) {
-  return request('DELETE', url, data)
+export function del(url, data = {}, options) {
+  return request('DELETE', url, data, options)
 }

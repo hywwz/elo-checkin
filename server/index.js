@@ -8,7 +8,7 @@ import {
   createSession,
   revokeSession,
   publicUser,
-  findUserByToken,
+  authenticate,
   cleanupExpiredSessions,
   isAdminAccount
 } from './auth.js'
@@ -16,6 +16,7 @@ import {
   handleAdminUsers,
   handleAdminUserRecords,
   handleAdminResetPassword,
+  handleAdminForceLogout,
   handleAdminDeleteUser
 } from './admin.js'
 import { handleGoalsRequest } from './goals.js'
@@ -155,11 +156,7 @@ async function handleLogout(req, res, token) {
   return send(res, 200, 0, '已退出登录')
 }
 
-async function handleUsersMe(req, res, token) {
-  const user = findUserByToken(token)
-  if (!user) {
-    return send(res, 401, 10001, '登录已失效，请重新登录')
-  }
+function handleUsersMe(res, user) {
   return send(res, 200, 0, 'success', {
     user: { ...publicUser(user), isAdmin: isAdminAccount(user.account) }
   })
@@ -202,35 +199,30 @@ async function route(req, res) {
   if (path === '/v1/auth/logout' && req.method === 'POST') {
     return handleLogout(req, res, token)
   }
+
+  const auth = authenticate(token)
+  if (auth.message) {
+    return send(res, 401, 10001, auth.message)
+  }
+  const user = auth.user
+
   if (path === '/v1/auth/change-password' && req.method === 'POST') {
-    const user = findUserByToken(token)
-    if (!user) {
-      return send(res, 401, 10001, '登录已失效，请重新登录')
-    }
     return handleChangePassword(req, res, user)
   }
 
   if (path === '/v1/users/me' && req.method === 'GET') {
-    return handleUsersMe(req, res, token)
+    return handleUsersMe(res, user)
   }
 
   if (path === '/v1/admin/users' && req.method === 'GET') {
-    const user = findUserByToken(token)
-    if (!user) {
-      return send(res, 401, 10001, '登录已失效，请重新登录')
-    }
     if (!isAdminAccount(user.account)) {
       return send(res, 403, 10001, '无管理员权限')
     }
     return handleAdminUsers(req, res)
   }
 
-  const adminActionMatch = path.match(/^\/v1\/admin\/users\/([^/]+)\/(records|reset-password|delete)$/)
+  const adminActionMatch = path.match(/^\/v1\/admin\/users\/([^/]+)\/(records|logout|reset-password|delete)$/)
   if (adminActionMatch) {
-    const user = findUserByToken(token)
-    if (!user) {
-      return send(res, 401, 10001, '登录已失效，请重新登录')
-    }
     if (!isAdminAccount(user.account)) {
       return send(res, 403, 10001, '无管理员权限')
     }
@@ -242,6 +234,9 @@ async function route(req, res) {
     if (action === 'reset-password' && req.method === 'POST') {
       return handleAdminResetPassword(req, res, targetUserId)
     }
+    if (action === 'logout' && req.method === 'POST') {
+      return handleAdminForceLogout(req, res, targetUserId)
+    }
     if (action === 'delete' && req.method === 'DELETE') {
       return handleAdminDeleteUser(req, res, targetUserId)
     }
@@ -250,19 +245,11 @@ async function route(req, res) {
 
   const goalMatch = path.match(/^\/v1\/goals(?:\/([^/]+))?$/)
   if (goalMatch) {
-    const user = findUserByToken(token)
-    if (!user) {
-      return send(res, 401, 10001, '登录已失效，请重新登录')
-    }
     return handleGoalsRequest(req, res, user, goalMatch[1] || null)
   }
 
   const weekMatch = path.match(/^\/v1\/goals\/([^/]+)\/week-progress$/)
   if (weekMatch) {
-    const user = findUserByToken(token)
-    if (!user) {
-      return send(res, 401, 10001, '登录已失效，请重新登录')
-    }
     if (req.method !== 'GET') {
       return send(res, 405, 10004, '请求方法不支持')
     }
@@ -271,18 +258,10 @@ async function route(req, res) {
 
   const checkinMatch = path.match(/^\/v1\/checkins(?:\/(today))?$/)
   if (checkinMatch) {
-    const user = findUserByToken(token)
-    if (!user) {
-      return send(res, 401, 10001, '登录已失效，请重新登录')
-    }
     return handleCheckinsRequest(req, res, user, checkinMatch[1] || null)
   }
 
   if (path === '/v1/statistics' && req.method === 'GET') {
-    const user = findUserByToken(token)
-    if (!user) {
-      return send(res, 401, 10001, '登录已失效，请重新登录')
-    }
     return handleStatistics(req, res, user)
   }
 
@@ -293,7 +272,15 @@ function cryptoRandomId(prefix) {
   return `${prefix}_${randomUUID().replaceAll('-', '').slice(0, 20)}`
 }
 
-const server = createServer(route)
+const server = createServer((req, res) => {
+  route(req, res).catch(err => {
+    try {
+      send(res, 400, 10004, '请求格式错误')
+    } catch (e) {
+      // 响应已发送时忽略
+    }
+  })
+})
 server.listen(PORT, () => {
   console.log(`elo backend running at http://localhost:${PORT}`)
   console.log('health: http://localhost:' + PORT + '/v1/health')
