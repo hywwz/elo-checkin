@@ -15,6 +15,10 @@ const ELO_DEFAULT_CHANNEL_NAME = '打卡提醒'
  */
 export class AlarmReceiver extends BroadcastReceiver {
 
+	constructor() {
+		super()
+	}
+
 	override onReceive(context : Context, intent : Intent) : void {
 		const id = intent.getIntExtra('id', 0)
 		const title = intent.getStringExtra('title') ?? '提醒'
