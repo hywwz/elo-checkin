@@ -516,7 +516,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: auto;
+  margin-top: 44rpx;
   padding: 28rpx;
   background: #FFF7F7;
   border: 2rpx solid #F6D9DA;

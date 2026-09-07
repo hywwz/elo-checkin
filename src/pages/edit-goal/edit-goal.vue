@@ -49,22 +49,20 @@
 
       <view class="field-group">
         <text class="label">提醒时间</text>
-        <view class="time-picker" @click="openTimePicker">
-          <view class="t-col">
-            <view class="t-arrow">▲</view>
-            <text class="t-value">{{ pad(tpHour) }}</text>
-            <text class="t-unit">时</text>
-            <view class="t-arrow down">▼</view>
+        <picker
+          mode="multiSelector"
+          :range="timeRange"
+          :value="timeValue"
+          @change="onTimeChange"
+        >
+          <view class="time-field">
+            <view class="time-copy">
+              <text class="time-value">{{ timeText }}</text>
+              <text class="time-hint">点按后滚动选择小时与分钟</text>
+            </view>
+            <text class="time-arrow">›</text>
           </view>
-          <text class="t-colon">:</text>
-          <view class="t-col">
-            <view class="t-arrow">▲</view>
-            <text class="t-value">{{ pad(tpMin) }}</text>
-            <text class="t-unit">分</text>
-            <view class="t-arrow down">▼</view>
-          </view>
-        </view>
-        <text class="tip">分钟可逐分调整，精确到任意时刻</text>
+        </picker>
       </view>
 
       <button class="save" :disabled="loading" @click="save">
@@ -73,48 +71,14 @@
       </button>
     </view>
 
-    <view v-if="showTimeSheet" class="time-mask" @click="closeTimePicker">
-      <view class="time-sheet" @click.stop>
-        <view class="sheet-head">
-          <text class="sheet-action" @click.stop="closeTimePicker">取消</text>
-          <text class="sheet-title">提醒时间</text>
-          <text class="sheet-action done" @click.stop="confirmTime">确定</text>
-        </view>
-        <view class="sheet-wheel-area">
-          <view class="wheel-cell">
-            <view class="wheel-pill"></view>
-            <picker-view
-              class="wheel"
-              :value="[sheetHour]"
-              @change="e => onSheetChange('hour', e)"
-            >
-              <picker-view-column>
-                <view v-for="h in hourOptions" :key="h" class="wheel-item">{{ pad(h) }}</view>
-              </picker-view-column>
-            </picker-view>
-            <text class="wheel-unit">时</text>
-          </view>
-          <view class="wheel-cell">
-            <view class="wheel-pill"></view>
-            <picker-view
-              class="wheel"
-              :value="[sheetMin]"
-              @change="e => onSheetChange('min', e)"
-            >
-              <picker-view-column>
-                <view v-for="m in minuteOptions" :key="m" class="wheel-item">{{ pad(m) }}</view>
-              </picker-view-column>
-            </picker-view>
-            <text class="wheel-unit">分</text>
-          </view>
-        </view>
-      </view>
-    </view>
   </view>
 </template>
 
 <script>
 import { get, put } from '../../utils/request.js'
+
+const hourLabels = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
+const minuteLabels = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
 
 export default {
   data() {
@@ -125,8 +89,8 @@ export default {
       freqMode: 'daily',
       weeklyCount: 3,
       fixedDays: [],
-      hourOptions: Array.from({ length: 24 }, (_, i) => i),
-      minuteOptions: Array.from({ length: 60 }, (_, i) => i),
+      timeRange: [hourLabels, minuteLabels],
+      timeValue: [21, 30],
       weekOptions: [
         { label: '一', value: 1 },
         { label: '二', value: 2 },
@@ -138,9 +102,6 @@ export default {
       ],
       tpHour: 21,
       tpMin: 30,
-      showTimeSheet: false,
-      sheetHour: 21,
-      sheetMin: 30,
       loading: false,
       errors: {}
     }
@@ -192,31 +153,18 @@ export default {
         const [h, m] = (target.reminderTime || '21:30').split(':').map(Number)
         this.tpHour = Number.isInteger(h) ? h : 21
         this.tpMin = Number.isInteger(m) ? m : 30
+        this.timeValue = [this.tpHour, this.tpMin]
       }
     },
     pad(n) {
       return String(n).padStart(2, '0')
     },
-    openTimePicker() {
-      this.sheetHour = this.tpHour
-      this.sheetMin = this.tpMin
-      this.showTimeSheet = true
-    },
-    closeTimePicker() {
-      this.showTimeSheet = false
-    },
-    confirmTime() {
-      this.tpHour = this.sheetHour
-      this.tpMin = this.sheetMin
-      this.showTimeSheet = false
-    },
-    onSheetChange(part, e) {
-      const value = Number(e.detail.value[0])
-      if (part === 'hour' && value >= 0 && value <= 23) {
-        this.sheetHour = value
-      } else if (part === 'min' && value >= 0 && value <= 59) {
-        this.sheetMin = value
-      }
+    onTimeChange(e) {
+      const indexes = (e && e.detail && e.detail.value) || []
+      const hour = Number(this.timeRange[0][indexes[0]])
+      const minute = Number(this.timeRange[1][indexes[1]])
+      if (Number.isInteger(hour) && hour >= 0 && hour <= 23) this.tpHour = hour
+      if (Number.isInteger(minute) && minute >= 0 && minute <= 59) this.tpMin = minute
     },
     changeDays(delta) {
       this.weeklyCount = Math.min(7, Math.max(1, this.weeklyCount + delta))
@@ -293,6 +241,7 @@ export default {
   margin-bottom: 14rpx;
 }
 .field {
+  box-sizing: border-box;
   width: 100%;
   height: 96rpx;
   padding: 0 26rpx;
@@ -392,139 +341,36 @@ export default {
   min-width: 86rpx;
   text-align: center;
 }
-.time-picker {
+.time-field {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 36rpx;
   background: #fff;
   border: 3rpx solid #DCEFE5;
   border-radius: 30rpx;
-  padding: 18rpx 20rpx;
+  padding: 22rpx 28rpx;
   box-shadow: 0 18rpx 36rpx -30rpx rgba(20, 65, 46, 0.6);
 }
-.t-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6rpx;
-  min-width: 106rpx;
+.time-copy {
+  flex: 1;
+  min-width: 0;
 }
-.t-arrow {
-  width: 58rpx;
-  height: 44rpx;
-  border-radius: 18rpx;
-  background: #E8F9F0;
-  color: #0B9D60;
-  font-size: 22rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.t-arrow.down {
-  margin-top: 2rpx;
-}
-.t-value {
-  font-size: 56rpx;
+.time-value {
+  display: block;
+  font-size: 42rpx;
   font-weight: 800;
   color: #1B2438;
-  letter-spacing: 2rpx;
-  line-height: 1.2;
+  letter-spacing: 3rpx;
 }
-.t-unit {
-  font-size: 17rpx;
-  font-weight: 800;
-  color: #A6B0C4;
-  letter-spacing: 4rpx;
+.time-hint {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #9AA6BA;
 }
-.t-colon {
-  font-size: 48rpx;
-  font-weight: 800;
-  color: #C2CDDC;
-  margin-top: -16rpx;
-}
-.time-mask {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  background: rgba(15, 23, 42, 0.45);
-  z-index: 999;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-.time-sheet {
-  width: 750rpx;
-  background: #fff;
-  border-radius: 36rpx 36rpx 0 0;
-  padding-bottom: 40rpx;
-}
-.sheet-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 26rpx 40rpx 16rpx;
-}
-.sheet-action {
-  font-size: 30rpx;
-  font-weight: 500;
-  color: #0B9D60;
-  padding: 8rpx;
-}
-.sheet-action.done {
-  font-weight: 800;
-}
-.sheet-title {
-  font-size: 28rpx;
+.time-arrow {
+  font-size: 40rpx;
+  color: #C0CADA;
   font-weight: 700;
-  color: #243042;
-}
-.sheet-wheel-area {
-  display: flex;
-  justify-content: center;
-  gap: 32rpx;
-  padding: 0 40rpx 8rpx;
-}
-.wheel-cell {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 200rpx;
-}
-.wheel-pill {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 96rpx;
-  transform: translateY(-50%);
-  background: #E8F9F0;
-  border-radius: 26rpx;
-  z-index: 0;
-}
-.wheel {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 336rpx;
-}
-.wheel-item {
-  height: 96rpx;
-  line-height: 96rpx;
-  text-align: center;
-  font-size: 52rpx;
-  font-weight: 800;
-  color: #1B2438;
-}
-.wheel-unit {
-  margin-top: 8rpx;
-  font-size: 26rpx;
-  font-weight: 700;
-  color: #A6B0C4;
-  letter-spacing: 4rpx;
 }
 .tip {
   display: block;

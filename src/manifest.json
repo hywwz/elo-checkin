@@ -2,8 +2,8 @@
     "name" : "elo打卡",
     "appid" : "__UNI__19AE649",
     "description" : "个人自我管理打卡工具：坚持小目标，看见自己的进步。",
-    "versionName" : "1.0.2",
-    "versionCode" : "102",
+    "versionName" : "1.0.3",
+    "versionCode" : "103",
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {

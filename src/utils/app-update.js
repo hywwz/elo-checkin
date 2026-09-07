@@ -1,7 +1,7 @@
 import { API_BASE_URL } from './api-config.js'
 
 // 当前安装版本：与 src/manifest.json 的 versionName 保持一致（发新版时同步修改）
-export const APP_VERSION = '1.0.2'
+export const APP_VERSION = '1.0.3'
 
 // 每个会话只自动弹一次更新提示，避免多页面重复打扰
 let autoChecked = false
@@ -32,7 +32,9 @@ function requestUpdateInfo() {
         if (body && body.code === 0 && body.data) {
           resolve(body.data)
         } else {
-          reject(new Error('bad response'))
+          const err = new Error('bad response')
+          err.statusCode = res && res.statusCode
+          reject(err)
         }
       },
       fail: reject
@@ -81,11 +83,18 @@ export function forceCheckForAppUpdate() {
   // #ifdef APP-PLUS
   requestUpdateInfo()
     .then(promptUpdate)
-    .catch(() => {
-      uni.showToast({
-        title: '检查更新失败，请稍后重试',
-        icon: 'none'
-      })
+    .catch(err => {
+      if (err && (err.statusCode === 401 || err.statusCode === 404)) {
+        uni.showToast({
+          title: '后端更新服务尚未生效，请稍后再试',
+          icon: 'none'
+        })
+      } else {
+        uni.showToast({
+          title: '检查更新失败，请稍后重试',
+          icon: 'none'
+        })
+      }
     })
   // #endif
 }
