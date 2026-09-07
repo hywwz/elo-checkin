@@ -19,6 +19,12 @@
       }
     },
     {
+      "path": "pages/notify-test/notify-test",
+      "style": {
+        "navigationBarTitleText": "提醒测试"
+      }
+    },
+    {
       "path": "pages/admin-users/admin-users",
       "style": {
         "navigationBarTitleText": "管理员 · 用户列表"

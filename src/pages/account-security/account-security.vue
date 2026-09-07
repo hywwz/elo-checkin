@@ -75,6 +75,16 @@
         <text class="update-arrow">›</text>
       </view>
 
+      <!-- #ifdef APP-PLUS -->
+      <view class="update-card" @click="goNotifyTest">
+        <view class="update-copy">
+          <text class="update-title">提醒测试</text>
+          <text class="update-sub">本地定时通知真机验证（开发用）</text>
+        </view>
+        <text class="update-arrow">›</text>
+      </view>
+      <!-- #endif -->
+
       <view class="logout-card" @click="logout">
         <text>退出登录</text>
       </view>
@@ -120,6 +130,9 @@ export default {
   methods: {
     checkUpdate() {
       forceCheckForAppUpdate()
+    },
+    goNotifyTest() {
+      uni.navigateTo({ url: '/pages/notify-test/notify-test' })
     },
     setUserInfo() {
       const user = uni.getStorageSync('eloUser')
