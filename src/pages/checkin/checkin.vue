@@ -73,6 +73,14 @@
 <script>
 import { get, post, del } from '../../utils/request.js'
 import { checkForAppUpdate } from '../../utils/app-update.js'
+// #ifdef APP-PLUS
+import {
+  syncReminders,
+  showMilestoneNotification,
+  achievementEnabled,
+  MILESTONES
+} from '../../utils/reminder-scheduler.js'
+// #endif
 
 export default {
   data() {
@@ -154,6 +162,9 @@ export default {
         const data = await get(`/goals?date=${date}`)
         this.goals = data.goals || []
         this.streak = data.streak || 0
+        // #ifdef APP-PLUS
+        syncReminders(this.goals)
+        // #endif
       } catch (err) {
         // 请求层已提示
       } finally {
@@ -162,6 +173,7 @@ export default {
     },
     async toggle(id) {
       try {
+        const beforeStreak = this.streak || 0
         if (this.isDone(id)) {
           await del('/checkins/today', { goalId: id })
           uni.showToast({ title: '已取消今日打卡', icon: 'none' })
@@ -173,10 +185,20 @@ export default {
             uni.showToast({ title: '打卡成功', icon: 'success' })
           }
         }
-        this.fetchGoals()
+        await this.fetchGoals()
+        // #ifdef APP-PLUS
+        this.checkMilestone(beforeStreak)
+        // #endif
       } catch (err) {
         // 请求层已提示
       }
+    },
+    checkMilestone(beforeStreak) {
+      if (!achievementEnabled()) return
+      const current = this.streak || 0
+      const reached = MILESTONES.filter((days) => current >= days && beforeStreak < days)
+      if (!reached.length) return
+      showMilestoneNotification(reached[reached.length - 1])
     },
     goStats() {
       uni.navigateTo({ url: '/pages/statistics/statistics' })

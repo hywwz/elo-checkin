@@ -67,6 +67,33 @@
         <text>{{ loading ? '正在保存…' : '保存新密码' }}</text>
       </view>
 
+      <!-- #ifdef APP-PLUS -->
+      <view class="section-head">
+        <text class="section-title">系统提醒</text>
+        <text class="section-sub">本地通知 · 不依赖推送服务</text>
+      </view>
+
+      <view class="setting-card">
+        <view class="setting-row">
+          <view class="setting-copy">
+            <text class="setting-title">风险提醒</text>
+            <text class="setting-sub">当天 22:00 还没打卡时提醒你，还有时间可以试着做做</text>
+          </view>
+          <switch :checked="riskOn" color="#0B9D60" @change="toggleRisk" />
+        </view>
+        <view class="setting-row">
+          <view class="setting-copy">
+            <text class="setting-title">成就提醒</text>
+            <text class="setting-sub">连续打卡达到 7 / 30 / 100 / 365 天时推送庆祝</text>
+          </view>
+          <switch :checked="achievementOn" color="#0B9D60" @change="toggleAchievement" />
+        </view>
+      </view>
+      <text class="setting-tip">
+        按时提醒始终按每个目标的提醒时间推送。开启开关后，打开 App 会自动安排未来 30 天的提醒。
+      </text>
+      <!-- #endif -->
+
       <view class="update-card" @click="checkUpdate">
         <view class="update-copy">
           <text class="update-title">检查更新</text>
@@ -99,6 +126,16 @@ import {
   checkForAppUpdate,
   forceCheckForAppUpdate
 } from '../../utils/app-update.js'
+// #ifdef APP-PLUS
+import {
+  syncAllReminders,
+  cancelAllReminders,
+  riskEnabled,
+  achievementEnabled,
+  setRiskEnabled,
+  setAchievementEnabled
+} from '../../utils/reminder-scheduler.js'
+// #endif
 
 export default {
   data() {
@@ -116,7 +153,9 @@ export default {
       showConfirm: false,
       loading: false,
       errors: {},
-      formOk: ''
+      formOk: '',
+      riskOn: true,
+      achievementOn: true
     }
   },
   onLoad() {
@@ -126,8 +165,33 @@ export default {
     this.setUserInfo()
     this.refreshUser()
     checkForAppUpdate()
+    this.loadNotifyPrefs()
   },
   methods: {
+    loadNotifyPrefs() {
+      // #ifdef APP-PLUS
+      this.riskOn = riskEnabled()
+      this.achievementOn = achievementEnabled()
+      // #endif
+    },
+    async toggleRisk(e) {
+      // #ifdef APP-PLUS
+      const value = Boolean(e && e.detail ? e.detail.value : e)
+      setRiskEnabled(value)
+      this.riskOn = value
+      const result = await syncAllReminders()
+      if (!result.ok && result.reason === 'notification-disabled') {
+        uni.showToast({ title: '请先在系统设置中开启通知权限', icon: 'none' })
+      }
+      // #endif
+    },
+    toggleAchievement(e) {
+      // #ifdef APP-PLUS
+      const value = Boolean(e && e.detail ? e.detail.value : e)
+      setAchievementEnabled(value)
+      this.achievementOn = value
+      // #endif
+    },
     checkUpdate() {
       forceCheckForAppUpdate()
     },
@@ -199,6 +263,9 @@ export default {
       } catch (err) {
         // 忽略接口报错
       }
+      // #ifdef APP-PLUS
+      cancelAllReminders()
+      // #endif
       uni.removeStorageSync('eloToken')
       uni.removeStorageSync('eloUser')
       uni.reLaunch({ url: '/pages/login/login' })
@@ -403,6 +470,47 @@ export default {
 }
 .save-btn.disabled {
   opacity: 0.75;
+}
+.setting-card {
+  margin-top: 4rpx;
+  background: #fff;
+  border: 2rpx solid #E2EFE7;
+  border-radius: 34rpx;
+  padding: 2rpx 28rpx;
+  box-shadow: 0 18rpx 38rpx -32rpx rgba(20, 65, 46, 0.65);
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 0;
+}
+.setting-row + .setting-row {
+  border-top: 2rpx solid #EEF2F7;
+}
+.setting-copy {
+  flex: 1;
+  min-width: 0;
+}
+.setting-title {
+  display: block;
+  font-size: 25rpx;
+  font-weight: 800;
+  color: #243042;
+}
+.setting-sub {
+  display: block;
+  margin-top: 5rpx;
+  font-size: 19rpx;
+  line-height: 1.5;
+  color: #8E9AAF;
+}
+.setting-tip {
+  display: block;
+  margin: 16rpx 8rpx 0;
+  font-size: 19rpx;
+  line-height: 1.6;
+  color: #9AA6BA;
 }
 .logout-card {
   display: flex;
