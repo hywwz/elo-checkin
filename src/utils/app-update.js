@@ -1,7 +1,7 @@
 import { API_BASE_URL } from './api-config.js'
 
 // 当前安装版本：与 src/manifest.json 的 versionName 保持一致（发新版时同步修改）
-export const APP_VERSION = '1.0.1'
+export const APP_VERSION = '1.0.2'
 
 // 每个会话只自动弹一次更新提示，避免多页面重复打扰
 let autoChecked = false
