@@ -5,10 +5,10 @@
 
 export const APP_UPDATE = {
   // 与 src/manifest.json 中 versionName 保持一致（不带 v 前缀）
-  latestVersion: '1.0.1',
+  latestVersion: '1.0.3',
   // APK 下载地址：上传到 GitHub Releases 后形如
-  // https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/xxx.apk
-  downloadUrl: '',
+  // https://github.com/hywwz/elo-checkin/releases/download/v1.0.3/xxx.apk
+  downloadUrl: 'https://github.com/hywwz/elo-checkin/releases/download/v1.0.3/elo-checkin-v1.0.3.apk',
   // 更新说明（可选）
-  releaseNotes: ''
+  releaseNotes: 'v1.0.3：系统原生时间滚轮、输入框对齐、账号页间距与更新提示优化'
 }
