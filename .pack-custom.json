@@ -1,0 +1,10 @@
+{
+	"project": "B:/Networking/my-vue3-project",
+	"platform": "android",
+	"iscustom": true,
+	"safemode": false,
+	"android": {
+		"packagename": "com.elo.checkin.debug",
+		"androidpacktype": "3"
+	}
+}

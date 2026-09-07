@@ -10,8 +10,12 @@ lerna-debug.log*
 node_modules
 .DS_Store
 dist
+unpackage
 server/data
 *.local
+
+# 本机 HBuilderX CLI 云打包需要根目录 static 图标目录（联接/副本指向 src/static），勿提交
+/static/
 
 # Editor directories and files
 .idea
