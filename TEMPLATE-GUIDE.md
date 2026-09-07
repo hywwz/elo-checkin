@@ -1,6 +1,6 @@
 # elo 打卡 · 模板框架提炼（小白版）
 
-> 本文件把 elo 打卡项目的代码结构"拆开讲清楚"：每一层是干什么的、文件之间怎么连接、做新功能时要改哪里。看完你能拿着这套结构去做自己的小程序 / App。
+> 本文件把 elo 打卡项目的代码结构"拆开讲清楚"：每一层是干什么的、文件之间怎么连接、做新功能时要改哪里。看完你能拿着这套结构去做自己的 App / 小程序。（当前项目主端为 Android App，微信小程序已停更。）
 
 ---
 
@@ -48,6 +48,8 @@ src/pages/checkin/checkin.vue        登录后的主页
 src/pages/set-goal/set-goal.vue      新建目标
 src/pages/edit-goal/edit-goal.vue    修改目标
 src/pages/statistics/statistics.vue  统计
+src/pages/account-security/account-security.vue  账号与安全 / 修改密码 / 系统提醒开关
+src/pages/notify-test/notify-test.vue            本地通知真机测试（开发入口）
 ```
 
 页面常用写法（每个页面几乎都长这样）：
@@ -99,7 +101,7 @@ await post('/goals', { name: '学习' })              // POST（传 JSON）
 await del('/checkins/today', { goalId: 'goal_1' })  // DELETE
 ```
 
-约定：凡是调后端，**都从这里走**，不要自己开一条 `uni.request`。
+约定：凡是调登录后的接口，**都从这里走**，不要自己开一条 `uni.request`。唯一的例外是 `src/utils/app-update.js`（更新接口无需登录，单独请求）。
 
 ### 2.4 App 版本更新（src/utils/app-update.js）
 
@@ -108,6 +110,19 @@ await del('/checkins/today', { goalId: 'goal_1' })  // DELETE
 - `APP_VERSION` = 当前安装版本号（发新版时和 `manifest.json`、`server/app-update.js` 三处一起改）；
 - `checkForAppUpdate()` = 自动检查（每会话一次，失败静默）；
 - `forceCheckForAppUpdate()` = 手动检查（"检查更新"按钮用）。
+
+### 2.5 系统提醒调度（src/utils/reminder-scheduler.js + uni_modules/elo-notify）
+
+`src/utils/reminder-scheduler.js`：把后端目标列表转成“未来 30 天的本地闹钟”，每次打卡页刷新/打卡后重新排布；风险与成就提醒开关存本地。
+
+`src/uni_modules/elo-notify/`：自研 UTS 原生插件，负责 Android 通知权限、立即通知、指定时间通知与取消。
+
+```js
+// APP-PLUS 下导入示例
+import { syncAllReminders, showMilestoneNotification } from '../../utils/reminder-scheduler.js'
+```
+
+说明：提醒只调度在设备本地，后端不保存提醒任务；小米/红米需开启「自启动 + 省电策略无限制」，否则系统会冻结闹钟。
 
 ---
 
@@ -196,15 +211,17 @@ SQLite = 一个文件数据库，不用安装任何数据库软件。表结构�
 ```bash
 npm install                 # 第一次拉完代码先装依赖
 
-npm run dev:mp-weixin       # 开发微信小程序（微信开发者工具导入 dist/dev/mp-weixin）
-npm run build:mp-weixin     # 编译小程序正式产物 → dist/build/mp-weixin
+npm run dev:h5              # 本地 H5 调试
+npm run build:h5            # 编译 H5，快速检查页面/JS 语法
 
-npx uni build -p app        # 编译 App 资源 → dist/build/app（之后 HBuilderX 云打包）
+# App 真机/云打包（HBuilderX CLI，源码工程根目录）
+B:/Networking/HBuilderX/cli.exe publish app --type appResource --project <项目根>
+B:/Networking/HBuilderX/cli.exe pack --config .pack-release.json
 
 cd server && npm start      # 本地启动后端 → http://localhost:3000
 ```
 
-本地联调小抄：后端起在 3000 端口，`src/utils/api-config.js` 改成 `http://localhost:3000/v1`，小程序开发者工具勾选"不校验合法域名"即可联调；要上线时改回线上地址。
+本地联调小抄：后端起在 3000 端口，`src/utils/api-config.js` 改成 `http://localhost:3000/v1`，H5 调试完记得改回线上地址 `https://cywspqlnlffd.cloud.sealos.io/v1`。
 
 ---
 
@@ -217,9 +234,10 @@ cd server && npm start      # 本地启动后端 → http://localhost:3000
 3. `src/static/`：换自己的 App 图标（1024 源图 + 5 个分辨率，manifest 里配好）；
 4. `server/index.js`：把 `/goals` `/checkins` 等路由替换成你的业务；
 5. `server/db.js`：把表结构换成你的数据模型；
-6. `server/app-update.js` + `src/utils/app-update.js`：换成你的下载地址和版本号；
-7. `.github/workflows/build-backend-image.yml`：把镜像名 `elo-backend` 换成你的项目名；
-8. README.md / PROJECT.md / backend-api.md：改成你的说明。
+6. `server/app-update.js` + `src/utils/app-update.js` + `src/manifest.json`：三处版本号 + 下载地址同步换；
+7. 不需要系统提醒就删掉 `src/utils/reminder-scheduler.js` 与 `src/uni_modules/elo-notify/`，并把页面里的引用清掉；
+8. `.github/workflows/build-backend-image.yml`：把镜像名 `elo-backend` 换成你的项目名；
+9. README.md / PROJECT.md / backend-api.md / INSTALL-GUIDE.md：改成你的说明。
 
 > 提醒：模板里的数据库、路由、页面都是 elo 打卡的业务代码。最省力的迁移方式是**保留 `src/utils/`、`server/auth.js`、`server/index.js` 的路由骨架、`.github` 部署工作流**，业务表换成你自己的。
 

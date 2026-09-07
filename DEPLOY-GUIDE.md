@@ -152,7 +152,7 @@ git push -u origin master
 
 ---
 
-## 5. 微信小程序上线
+## 5. 微信小程序上线（⏸ 已停更，仅供历史参考）
 
 前提：微信公众平台注册了小程序（个人主体即可），拿到 AppID。
 
@@ -177,15 +177,15 @@ npm run build:mp-weixin
 
 ---
 
-## 6. Android App 打包与分发
+## 6. Android App 打包与分发（当前主链路）
 
 ### 6.1 流程概览
 
 ```text
-npx uni build -p app
-→ 得到 dist/build/app（App 资源，不是安装包！）
-→ HBuilderX 导入该目录
-→ 发行 → 原生App-云打包 → 云端证书 → 下载 APK
+用 HBuilderX 直接打开源码工程根目录（本仓库根目录，含 src/ 与 static Junction）
+→ 编译/导出 App 资源：HBuilderX CLI publish app --type appResource
+→ 云打包：HBuilderX CLI pack --config .pack-release.json
+→ 下载 APK 保存到 dist/release/
 ```
 
 ### 6.2 HBuilderX 首次准备（一次性的）
@@ -196,7 +196,7 @@ npx uni build -p app
 
 ### 6.3 云打包步骤
 
-1. HBuilderX 导入 `dist/build/app`；
+1. HBuilderX 打开源码工程根目录（不是 dist/build/app）；
 2. 打开 `manifest.json`（可视化界面）核对：应用名、**AppID（需在 DCloud 后台创建）**、版本号、图标；
 3. 菜单 → 发行 → 原生 App-云打包；
 4. 平台选 Android，证书选你的云端证书 → 打包 → 下载 APK。
@@ -215,11 +215,13 @@ npx uni build -p app
    - src/manifest.json 的 versionName / versionCode
    - src/utils/app-update.js 的 APP_VERSION
    - server/app-update.js 的 latestVersion + downloadUrl
-④ 到 Sealos 重新部署后端（让新版本号生效）
+④ push 后等 GitHub Actions 绿勾，再到 Sealos 对 elo-backend 执行“更新/保存”
 ⑤ 老用户打开 App → 自动弹“发现新版本” → 点击下载安装
 ```
 
 > Android 系统限制：不能静默自动安装，最后一步用户要点"安装"确认，这是平台规则，无解。
+
+给使用者的安装引导：见 [INSTALL-GUIDE.md](INSTALL-GUIDE.md)
 
 ---
 
@@ -227,10 +229,10 @@ npx uni build -p app
 
 | 动作 | 工具 | 备注 |
 | --- | --- | --- |
-| 改代码、编译验证 | 电脑命令行 | 小程序/App 两端都跑一遍 `npx uni build` |
+| 改代码、编译验证 | 电脑命令行 | 当前以 App 为主：H5 用 `npm run build:h5`；App 资源用 HBuilderX `publish app --type appResource` |
 | 提交推送 | git | 一条 commit 一个主题 |
 | 后端生效 | Sealos | 等 GitHub Actions 绿勾后点"更新/重新部署" |
-| 小程序新版本 | 微信开发者工具 | build 后导入 → 上传 → 设为体验版 |
+| 小程序 | ⏸ 已停更 | 微信小程序不再继续开发，只保留体验版 v1.0.1 |
 | App 新版本 | HBuilderX | 云打包 → 传 GitHub Releases → 改版本号三处 → Sealos 更新 |
 
 ---
@@ -243,7 +245,7 @@ npx uni build -p app
 | ghcr.io 镜像仓库 | 免费 | 与 GitHub 同账号 |
 | Sealos | 免费额度起步，按量付费可选 | Sealos 账号 |
 | HBuilderX 云打包 | 每天有免费次数；付费可选 | DCloud 账号 + 验证手机号 + 云端证书 |
-| 微信小程序 | 个人主体免费 | 微信小程序账号（AppID） |
+| 微信小程序 | ⏸ 已停更 | 只保留历史体验版 |
 | Android 证书 | DCloud 免费创建 | DCloud 账号 |
 
 > 唯一可能花钱的日常项是云打包次数，所以**建议攒一批改动再打包**，别改一个标点打一次。

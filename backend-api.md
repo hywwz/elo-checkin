@@ -1,8 +1,8 @@
-# elo 打卡小程序 · 后端接口文档
+# elo 打卡 App · 后端接口文档
 
 > 版本：v1  
-> 日期：2026-09-06  
-> 适用前端：uni-app + Vue3（微信小程序 / Android App / H5）  
+> 日期：2026-09-08  
+> 适用前端：uni-app + Vue3（当前以 Android App 为主，H5 可用于调试；微信小程序已停更）
 > 生产地址：https://cywspqlnlffd.cloud.sealos.io/v1
 
 ---
@@ -636,9 +636,9 @@ Authorization: Bearer <token>
   "code": 0,
   "message": "ok",
   "data": {
-    "latestVersion": "1.0.1",
-    "downloadUrl": "https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/elo-1.0.2.apk",
-    "releaseNotes": "修复登录页输入框宽度；新增更新检查"
+    "latestVersion": "1.0.3",
+    "downloadUrl": "https://github.com/hywwz/elo-checkin/releases/download/v1.0.3/elo-checkin-v1.0.3.apk",
+    "releaseNotes": "v1.0.3：系统原生时间滚轮、输入框对齐、账号页间距与更新提示优化"
   }
 }
 ```
@@ -651,7 +651,7 @@ Authorization: Bearer <token>
 | `downloadUrl` | APK 下载地址；为空时 App 提示“新版本即将发布” |
 | `releaseNotes` | 更新说明，展示在弹窗内容中 |
 
-配置位置：`server/app-update.js`。发布新版本时同步修改 `src/manifest.json` 的 `versionName` 与前端 `src/utils/app-update.js` 中的 `APP_VERSION`。
+配置位置：`server/app-update.js`。发布新版本时同步修改 `src/manifest.json` 的 `versionName` 与前端 `src/utils/app-update.js` 中的 `APP_VERSION`，随后 push 触发镜像构建并在 Sealos 重新部署。
 
 ---
 
@@ -677,4 +677,4 @@ Authorization: Bearer <token>
    - `checkins(user_id, goal_id, date)` 唯一。
 3. 首页一次请求的降级方案：先实现 `GET /goals` + `GET /checkins`，如性能压力大可后续提供 `GET /home/today` 聚合接口。
 4. 密码加密使用 bcrypt；token 使用 JWT 并设置过期时间。
-5. 微信小程序后续如需真实订阅消息提醒，可增加“提醒任务”表，建议单独再评估，不属于当前目标 CRUD 范围。
+5. 当前提醒由 App 本地闹钟调度（见 `src/utils/reminder-scheduler.js` 与 UTS 插件 `elo-notify`），后端不保存提醒任务；如需跨设备同步提醒偏好，后续再增加“提醒设置”字段。

@@ -1,6 +1,6 @@
 # elo 打卡
 
-一个以“个人自我管理”为核心的打卡小程序 / App：坚持小目标（学习、早睡、运动、自定义习惯），用看得见的记录鼓励自己持续进步。
+一个以“个人自我管理”为核心的打卡工具：坚持小目标（学习、早睡、运动、自定义习惯），用看得见的记录鼓励自己持续进步。当前对外发布的版本为 Android App（微信小程序已停更）。
 
 - 前端：uni-app + Vue 3 + Vite（可发布微信小程序 / H5 / Android App）
 - 后端：纯 Node.js + 内置 `node:sqlite`（零第三方依赖，需 Node 22+）
@@ -79,12 +79,11 @@ npm install
 # H5 调试
 npm run dev:h5
 
-# 微信小程序
+# 微信小程序（历史能力，已停更）
 npm run dev:mp-weixin
 npm run build:mp-weixin
 
-# App 资源（之后在 HBuilderX 云打包）
-npx uni build -p app
+# App：用 HBuilderX CLI 导出资源与云打包，见下方“发布流程 → Android App”
 ```
 
 后端接口地址在 `src/utils/api-config.js` 中配置，默认指向 Sealos 线上地址。
@@ -125,7 +124,7 @@ npm start          # 默认 http://localhost:3000
 2. push 到 GitHub，触发 Actions 自动构建并推送 `ghcr.io/hywwz/elo-backend:latest`；
 3. 到 Sealos 控制台对 `elo-backend` 执行一次“变更 → 保存”，拉取最新镜像。
 
-### 微信小程序
+### 微信小程序（历史能力，已停更）
 
 ```bash
 npm run build:mp-weixin
@@ -133,13 +132,18 @@ npm run build:mp-weixin
 
 在微信开发者工具导入 `dist/build/mp-weixin`，上传新版本并在公众平台“版本管理”中选为体验版。
 
-### Android App
+### Android App（当前主链路）
 
-```bash
-npx uni build -p app
+打包使用源码工程根目录 + HBuilderX CLI：
+
+```text
+cli.exe publish app --type appResource --project <项目根>
+cli.exe pack --config .pack-release.json
 ```
 
-在 HBuilderX 导入 `dist/build/app`，确认 manifest（名称 / DCloud AppID / 版本号 / App 图标），执行“发行 → 原生App-云打包”。
+打包配置为云端证书、包名 `com.elo.checkin`、targetSdk 34；APK 下载后保存到 `dist/release/`。
+
+安装与使用者的操作说明：见 [INSTALL-GUIDE.md](INSTALL-GUIDE.md)。
 
 App 图标（E + 打勾 设计稿）已配置在 `src/manifest.json` → `app-plus.distribute.icons.android`，对应多分辨率图标文件：
 

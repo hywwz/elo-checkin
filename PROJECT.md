@@ -36,7 +36,7 @@
 - App 正式图标：采用 E + 打勾 设计稿（源图 a5ea，1024×1024），生成 Android 各分辨率图标并写入 manifest
 - App 内更新检查：后端 `GET /app/update` 返回最新版本与下载地址，App 启动时自动检测新版并引导下载
 
-### v1.0.2（开发中）变更摘要
+### v1.0.2 变更摘要（2026-09-08 已发布）
 
 - 更新检查提前到登录页启动触发，未登录也能收到新版提示；“账号与安全”页新增“检查更新”手动入口
 - 版本号统一管理：前端版本常量收口到 `src/utils/app-update.js`，与 `manifest.json`、`server/app-update.js` 同步维护
@@ -234,7 +234,7 @@ src/
 
 后端健康检查：`GET https://cywspqlnlffd.cloud.sealos.io/v1/health`
 
-### 6.4 微信小程序发布流程
+### 6.4 微信小程序发布流程（⏸ 已停更，历史参考）
 
 ```text
 npm run build:mp-weixin
@@ -250,14 +250,11 @@ npm run build:mp-weixin
 ### 6.5 Android App 打包流程
 
 ```text
-npx uni build -p app
-→ dist/build/app（uni-app 编译好的 App 资源）
-→ HBuilderX 导入 dist/build/app
-→ manifest.json：名称 / AppID / 描述
-→ Build → App-Android/iOS - Cloud Packaging
-→ Android 证书选"云端证书"（需先创建）
-→ Channels None，模式 Safe Mode
-→ Submit，2~5 分钟出 APK
+HBuilderX CLI（源码工程根目录）：
+  B:/Networking/HBuilderX/cli.exe publish app --type appResource --project <项目根>
+  B:/Networking/HBuilderX/cli.exe pack --config .pack-release.json
+→ 打包配置：云端证书（androidpacktype=3），包名 com.elo.checkin
+→ 成功后从 CLI 给出的临时链接下载 APK，保存到 dist/release/
 ```
 
 当前 APK：`dist/release/elo-checkin-v1.0.3.apk`（v1.0.3，云打包产物下载保存位置）
@@ -273,7 +270,7 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
 → 居中裁方并放大为 src/static/app-icon-final.png（1024×1024）
 → 缩放为 Android 五个分辨率：48 / 72 / 96 / 144 / 192
 → src/manifest.json → app-plus.distribute.icons.android 引用上述文件
-→ npx uni build -p app → HBuilderX 导入 dist/build/app → 云打包
+→ HBuilderX 云打包（源码工程根目录，打包配置见 6.5）
 ```
 
 图标映射：
@@ -301,25 +298,26 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
 - 后端提供 `GET /v1/app/update`（无需登录），返回 `{ latestVersion, downloadUrl, releaseNotes }`；
 - App 端打卡主页登录后自动静默检查一次：后端版本号高于本机版本时弹窗提示，点“立即更新”用系统浏览器打开 APK 下载地址；
 - 更新配置集中在 `server/app-update.js`，发新版时只需修改该文件；
-- 说明：Android 不允许应用静默安装 APK，最后一步仍需用户点系统安装框；当前 latestVersion=1.0.1 与现网一致，因此不会误弹更新。
+- 说明：Android 不允许应用静默安装 APK，最后一步仍需用户点系统安装框；当前线上 latestVersion=1.0.3（2026-09-08）。
 
 **以后每发一次新版，按此流程操作：**
 
 ```text
-1. HBuilderX 云打包得到新 APK（dist/build/app/unpackage/release/apk/...）
-2. GitHub Releases 新建 Release（tag 如 v1.0.2），把 APK 作为附件上传
-3. 修改两处版本号并推送：
+1. HBuilderX 云打包得到新 APK（保存到 dist/release/，例如 elo-checkin-v1.0.3.apk）
+2. GitHub Releases 新建 Release（tag 如 v1.0.3），把 APK 作为附件上传
+3. 修改三处版本号并推送：
    - server/app-update.js：latestVersion 改为新版号，downloadUrl 填 Release 附件地址
    - src/manifest.json：versionName / versionCode 同步升级
+   - src/utils/app-update.js：APP_VERSION 同步升级
 4. GitHub Actions 自动重建后端镜像 → Sealos 对 elo-backend 执行“变更 → 保存”
 5. 旧版 App 用户打开后自动收到更新提示 → 点击下载安装
-6. 把 master 移动到新版提交后，同步 PROJECT.md“当前状态”与 7.6 表格里的标签哈希
+6. 同步 PROJECT.md“当前状态”与 7.6 表格里的标签哈希
 ```
 
 Release 附件下载地址形如：
 
 ```text
-https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/xxx.apk
+https://github.com/hywwz/elo-checkin/releases/download/v1.0.3/elo-checkin-v1.0.3.apk
 ```
 
 ---
@@ -343,7 +341,7 @@ https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/xxx.apk
 - Sealos 部署成功后会给一个公网 HTTPS 地址
 - 数据持久化：SQLite 文件目录要挂载持久卷，否则容器重建会丢数据
 
-### 7.3 微信小程序"合法域名"规则
+### 7.3 微信小程序“合法域名”规则（历史参考）
 
 - 开发者工具里勾选"不校验合法域名"**只对电脑模拟器有效**
 - 手机真机/体验版默认仍然校验域名
@@ -374,11 +372,13 @@ https://github.com/hywwz/elo-checkin/releases/download/v1.0.2/xxx.apk
 | `v0.2.1` | `fbe5dd0` | 发版前清理 | 删除前端 Mock 假数据，后端接口地址统一配置 |
 | `v1.0.0` | `2062c0e` | 首发 | 微信小程序体验版 + Sealos 后端 + Android APK |
 | `v1.0.1` | `5de1470`（已发布，标签固定） | 1.0.1 发布版 | 记住密码 / 账号与安全 / 管理员 / 正式图标 / 更新检查（初版） / 文档 |
-| （master） | 最新提交 | v1.0.2 开发中 | 更新检查优化 / 手动检查入口 / 版本统一 / 文档归档 |
+| `v1.0.2`（未打标签） | `f949ffa` | 内部正式包 | 本地通知插件 / 三类提醒 / 提醒开关 / targetSdk 34 |
+| `v1.0.3` | `693cb90`（标签已固定） | v1.0.3 正式发布 | 系统原生时间滚轮 / 输入框对齐 / 账号页间距 / GitHub Releases 分发 |
+| （master） | 最新提交 `2dd8359` | v1.0.4 开发中 | 手动检查更新提示“当前已是最新版本”等后续改动 |
 
 约定：
 - v0.x 是过程存档点，v1.x 才是对外版本；
-- 标签一旦作为发布版本打上后**不移动**；发布后若继续改代码，使用新版本号（如 `v1.0.2`）推进，避免改写历史；
+- 标签一旦作为发布版本打上后**不移动**；发布后若继续改代码，使用新版本号（如 `v1.0.4`）推进，避免改写历史；
 - 本地小步存档可直接 commit 到 master，无需每次打标签。
 
 ---
