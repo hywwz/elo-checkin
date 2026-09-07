@@ -50,6 +50,7 @@ export function showNotificationByReceiver(
 		notificationManager.createNotificationChannel(channel)
 	}
 	const builder = createBuilder(context, channelId)
+	builder.setSmallIcon(context.getApplicationInfo().icon)
 	builder.setContentTitle(title)
 	builder.setContentText(content)
 	builder.setAutoCancel(true)

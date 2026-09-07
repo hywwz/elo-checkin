@@ -122,8 +122,15 @@ export const requestNotificationPermission : EloRequestNotificationPermission = 
 	success ?: EloPermissionSuccess,
 	fail ?: EloPermissionFail
 ) : void {
+	const context = getContext()
 	const activity = UTSAndroid.getUniActivity()
 	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+		// Android 13+ 只有在应用 targetSdk >= 33 时才支持 POST_NOTIFICATIONS 运行时弹窗。
+		// targetSdk < 33 的应用通知默认开启（系统直接放行），无需再弹系统授权框。
+		if (context != null && context.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.TIRAMISU) {
+			success?.(isNotificationEnabled())
+			return
+		}
 		if (activity == null) {
 			fail?.(false)
 			return
