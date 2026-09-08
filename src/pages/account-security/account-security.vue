@@ -89,8 +89,17 @@
           <switch :checked="achievementOn" color="#0B9D60" @change="toggleAchievement" />
         </view>
       </view>
+
+      <view class="update-card" @click="resyncReminders">
+        <view class="update-copy">
+          <text class="update-title">立即重排提醒</text>
+          <text class="update-sub">手机重启或提醒漏排时，点一下恢复未来 30 天提醒</text>
+        </view>
+        <text class="update-arrow">›</text>
+      </view>
+
       <text class="setting-tip">
-        按时提醒始终按每个目标的提醒时间推送。开启开关后，打开 App 会自动安排未来 30 天的提醒。
+        按时提醒始终按每个目标的提醒时间推送。打开 App 会自动安排未来 30 天的提醒；重启后如担心漏排，点上方“立即重排提醒”即可恢复。
       </text>
       <!-- #endif -->
 
@@ -155,7 +164,8 @@ export default {
       errors: {},
       formOk: '',
       riskOn: true,
-      achievementOn: true
+      achievementOn: true,
+      syncing: false
     }
   },
   onLoad() {
@@ -190,6 +200,24 @@ export default {
       const value = Boolean(e && e.detail ? e.detail.value : e)
       setAchievementEnabled(value)
       this.achievementOn = value
+      // #endif
+    },
+    async resyncReminders() {
+      // #ifdef APP-PLUS
+      if (this.syncing) return
+      this.syncing = true
+      try {
+        const result = await syncAllReminders()
+        if (result.ok) {
+          uni.showToast({ title: `已重排 ${result.count} 条提醒`, icon: 'none' })
+        } else if (result.reason === 'notification-disabled') {
+          uni.showToast({ title: '请先在系统设置中开启通知权限', icon: 'none' })
+        } else {
+          uni.showToast({ title: '重排失败，请检查网络后重试', icon: 'none' })
+        }
+      } finally {
+        this.syncing = false
+      }
       // #endif
     },
     checkUpdate() {
