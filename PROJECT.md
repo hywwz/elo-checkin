@@ -16,11 +16,11 @@
 
 | 项目 | 状态 | 地址/说明 |
 | --- | --- | --- |
-| GitHub 仓库 | ✅ v1.0.3 已发布 | https://github.com/hywwz/elo-checkin |
+| GitHub 仓库 | ✅ v1.0.4 已发布 | https://github.com/hywwz/elo-checkin |
 | 后端（Sealos） | ✅ 运行中，更新接口已上线 | https://cywspqlnlffd.cloud.sealos.io |
-| Android App | ✅ v1.0.3 正式发布（com.elo.checkin / targetSdk 34） | APK 与更新地址见下方 v1.0.3 摘要 |
+| Android App | ✅ v1.0.4 正式发布（com.elo.checkin / targetSdk 34） | APK 与更新地址见下方 v1.0.4 摘要 |
 | 微信小程序 | ⏸ 不再继续开发，未来只做 Android App | 保留体验版 v1.0.1 |
-| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.3） |
+| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.4） |
 | 接口文档 | ✅ | [backend-api.md](backend-api.md) |
 
 ---
@@ -58,6 +58,14 @@
   - “账号与安全”页「退出登录」与上方卡片拉开间距（`margin-top: 44rpx`）
   - “检查更新”在接口异常时提示“后端更新服务尚未生效”；下版增加“当前已是最新版本”反馈
 
+### v1.0.4 发布摘要（2026-09-08）
+
+- 新增“目标管理”入口与全部目标页：每行支持修改 / 删除，新目标按钮统一收进目标管理，主页删除按钮移除
+- 删除目标时给出温柔确认文案，提醒会连带清除该目标的打卡记录
+- 去掉独立加载页，已有登录态时直接进入打卡主页
+- 手动检查更新增加“当前已是最新版本”提示
+- 修复小米手机横幅通知不弹出：改用新通知渠道 `elo_reminder_banner`（高优先级 + 锁屏可见）；若仍不弹，多为系统勿扰/专注模式压制横幅
+
 ### 2026-09-08 踩坑记录与解决方案
 
 | # | 问题现象 | 根因 | 解决方案 |
@@ -75,7 +83,6 @@
 
 ### 需要补充/仍待处理
 
-- 已提交但未打进 v1.0.3：手动检查更新显示“当前已是最新版本”提示（下个版本随包生效）
 - 重启手机后本地闹钟不会自动恢复，用户打开一次 App 后会重新排布；如需“重启后自动恢复”要新增 `BOOT_COMPLETED` 处理
 - 每周弹性（count）目标：本周未满次数前每天提醒，满次数后当天停止；如觉得频繁可再调
 - 提醒目前只做 Android；iOS 需开发者账号，暂缓
@@ -259,7 +266,7 @@ HBuilderX CLI（源码工程根目录）：
 → 成功后从 CLI 给出的临时链接下载 APK，保存到 dist/release/
 ```
 
-当前 APK：`dist/release/elo-checkin-v1.0.3.apk`（v1.0.3，云打包产物下载保存位置）
+当前 APK：`dist/release/elo-checkin-v1.0.4.apk`（v1.0.4，云打包产物下载保存位置）
 
 安装与分发说明：见 [INSTALL-GUIDE.md](INSTALL-GUIDE.md)
 
@@ -300,13 +307,13 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
 - 后端提供 `GET /v1/app/update`（无需登录），返回 `{ latestVersion, downloadUrl, releaseNotes }`；
 - App 端打卡主页登录后自动静默检查一次：后端版本号高于本机版本时弹窗提示，点“立即更新”用系统浏览器打开 APK 下载地址；
 - 更新配置集中在 `server/app-update.js`，发新版时只需修改该文件；
-- 说明：Android 不允许应用静默安装 APK，最后一步仍需用户点系统安装框；当前线上 latestVersion=1.0.3（2026-09-08）。
+- 说明：Android 不允许应用静默安装 APK，最后一步仍需用户点系统安装框；当前线上 latestVersion=1.0.4（2026-09-08）。
 
 **以后每发一次新版，按此流程操作：**
 
 ```text
-1. HBuilderX 云打包得到新 APK（保存到 dist/release/，例如 elo-checkin-v1.0.3.apk）
-2. GitHub Releases 新建 Release（tag 如 v1.0.3），把 APK 作为附件上传
+1. HBuilderX 云打包得到新 APK（保存到 dist/release/，例如 elo-checkin-v1.0.4.apk）
+2. GitHub Releases 新建 Release（tag 如 v1.0.4），把 APK 作为附件上传
 3. 修改三处版本号并推送：
    - server/app-update.js：latestVersion 改为新版号，downloadUrl 填 Release 附件地址
    - src/manifest.json：versionName / versionCode 同步升级
@@ -319,7 +326,7 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
 Release 附件下载地址形如：
 
 ```text
-https://github.com/hywwz/elo-checkin/releases/download/v1.0.3/elo-checkin-v1.0.3.apk
+https://github.com/hywwz/elo-checkin/releases/download/v1.0.4/elo-checkin-v1.0.4.apk
 ```
 
 ---
@@ -376,7 +383,8 @@ https://github.com/hywwz/elo-checkin/releases/download/v1.0.3/elo-checkin-v1.0.3
 | `v1.0.1` | `5de1470`（已发布，标签固定） | 1.0.1 发布版 | 记住密码 / 账号与安全 / 管理员 / 正式图标 / 更新检查（初版） / 文档 |
 | `v1.0.2`（未打标签） | `f949ffa` | 内部正式包 | 本地通知插件 / 三类提醒 / 提醒开关 / targetSdk 34 |
 | `v1.0.3` | `693cb90`（标签已固定） | v1.0.3 正式发布 | 系统原生时间滚轮 / 输入框对齐 / 账号页间距 / GitHub Releases 分发 |
-| （master） | 最新提交 `2dd8359` | v1.0.4 开发中 | 手动检查更新提示“当前已是最新版本”等后续改动 |
+| `v1.0.4` | `ea2c94e`（标签已固定） | v1.0.4 正式发布 | 目标管理（删除/全部目标入口） / 去加载页 / 小米横幅通知修复 |
+| （master） | 最新提交 `ea2c94e` | v1.0.5 开发中 | 待定 |
 
 约定：
 - v0.x 是过程存档点，v1.x 才是对外版本；

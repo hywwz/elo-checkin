@@ -636,9 +636,9 @@ Authorization: Bearer <token>
   "code": 0,
   "message": "ok",
   "data": {
-    "latestVersion": "1.0.3",
-    "downloadUrl": "https://github.com/hywwz/elo-checkin/releases/download/v1.0.3/elo-checkin-v1.0.3.apk",
-    "releaseNotes": "v1.0.3：系统原生时间滚轮、输入框对齐、账号页间距与更新提示优化"
+    "latestVersion": "1.0.4",
+    "downloadUrl": "https://github.com/hywwz/elo-checkin/releases/download/v1.0.4/elo-checkin-v1.0.4.apk",
+    "releaseNotes": "v1.0.4：目标管理支持删除与全部目标入口，登录后直进打卡主页，修复小米手机横幅通知不弹出"
   }
 }
 ```

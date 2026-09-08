@@ -1,4 +1,4 @@
-# elo 打卡 App 安装使用说明（v1.0.3）
+# elo 打卡 App 安装使用说明（v1.0.4）
 
 > 这份说明可以直接复制发给需要安装 App 的人。
 
@@ -12,7 +12,7 @@ elo 打卡 是一个个人习惯打卡 App：给自己设定每天/每周要坚�
 
 1. 用手机浏览器打开下面链接（不要用电脑下载再转，直接手机点最方便）：
 
-   `https://github.com/hywwz/elo-checkin/releases/download/v1.0.3/elo-checkin-v1.0.3.apk`
+   `https://github.com/hywwz/elo-checkin/releases/download/v1.0.4/elo-checkin-v1.0.4.apk`
 
 2. 如果打不开或下载太慢，也可以直接收我发的 APK 文件。
 3. 下载完成后点文件安装：
@@ -74,4 +74,4 @@ App 的提醒是手机本地系统通知，需要给权限：
 
 ---
 
-当前版本：v1.0.3（2026-09-08）
+当前版本：v1.0.4（2026-09-08）
