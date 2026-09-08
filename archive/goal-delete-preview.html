@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>删除功能 · 交互预览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #e8efe9;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 18px;
+  }
+  .phone {
+    width: 100%;
+    max-width: 420px;
+    background:
+      radial-gradient(180px 130px at 92% -2%, rgba(16,185,129,.10), rgba(16,185,129,0) 70%),
+      linear-gradient(180deg,#F9FCFA 0%,#F3F8F5 100%);
+    min-height: 780px;
+    border-radius: 30px;
+    padding: 20px 18px 26px;
+    box-shadow: 0 24px 60px -24px rgba(20,65,46,.35);
+    position: relative;
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .back {
+    width: 64px;
+    height: 64px;
+    border-radius: 22px;
+    background: #fff;
+    border: 2px solid #E2E7F0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    color: #0B7A4E;
+    cursor: pointer;
+    user-select: none;
+  }
+  .nav-title { font-size: 30px; font-weight: 800; color: #101828; }
+  .kicker { font-size: 15px; color: #0E9F6E; font-weight: 700; }
+  .title { font-size: 34px; font-weight: 800; color: #101828; margin: 4px 0 2px; }
+  .sub { font-size: 17px; color: #74819A; }
+  .home-head { display: flex; justify-content: space-between; align-items: center; }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 24px;
+    background: linear-gradient(145deg,#22C55E,#047857);
+    color:#fff; font-size: 28px; font-weight: 800;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .today-head { display: flex; justify-content: space-between; align-items: center; margin: 26px 0 16px; }
+  .th-title { font-size: 22px; font-weight: 800; color:#243042; }
+  .streak {
+    display:inline-block; margin-left:10px; font-size:14px; color:#0B7A4E;
+    background:#E8F9F0; border:1px solid #BCEBCE; border-radius:999px; padding:3px 10px;
+  }
+  .done-chip {
+    font-size:15px; color:#0B7A4E; background:#E8F9F0; border-radius:999px; padding:6px 14px;
+    font-weight:800;
+  }
+  .goal-row {
+    display:flex; align-items:center; gap:14px; background:#fff;
+    border:2px solid #E2EFE7; border-radius:24px; padding:16px;
+    box-shadow:0 14px 30px -26px rgba(20,65,46,.7); margin-bottom:12px;
+  }
+  .check {
+    width:48px; height:48px; border-radius:50%; flex-shrink:0;
+    border:3px solid #C9D6E8; color:transparent; font-size:24px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    background:#fff; user-select:none;
+  }
+  .check.done { background:linear-gradient(135deg,#22C55E,#0BA360); border-color:transparent; color:#fff; }
+  .goal-info { flex:1; min-width:0; }
+  .g-name { display:block; font-size:21px; font-weight:800; color:#243042; }
+  .g-task { display:block; font-size:16px; color:#7E8CA3; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .g-meta { display:block; font-size:14px; color:#A0AABE; margin-top:4px; }
+  .g-actions { display:flex; gap:8px; flex-shrink:0; }
+  .g-act {
+    min-width:56px; text-align:center; font-size:14px; font-weight:700;
+    border-radius:12px; padding:7px 10px; cursor:pointer; user-select:none;
+  }
+  .g-edit { color:#0B7A4E; background:#E8F9F0; }
+  .g-del { color:#C5484C; background:#FFF2F2; }
+  .home-edit {
+    flex-shrink:0; text-align:center; font-size:15px; font-weight:700;
+    color:#0B7A4E; background:#E8F9F0; border-radius:14px;
+    padding:8px 14px; cursor:pointer; user-select:none;
+  }
+  .off-tag {
+    display:inline-block; margin-left:8px; font-size:12px; color:#9AA6BA;
+    background:#F1F4F8; border-radius:999px; padding:2px 8px; vertical-align:2px;
+  }
+  .manage-card {
+    display:flex; align-items:center; gap:14px; background:#fff;
+    border:2px solid #E2EFE7; border-radius:24px; padding:16px;
+    margin-top:4px; box-shadow:0 14px 28px -26px rgba(20,65,46,.7);
+  }
+  .manage-copy { flex:1; }
+  .m-title { font-size:20px; font-weight:800; color:#243042; display:block; }
+  .m-sub { font-size:13px; color:#A0AABE; display:block; margin-top:3px; line-height:1.4; }
+  .manage-btn {
+    flex-shrink:0; font-size:15px; font-weight:800; color:#fff; text-align:center;
+    background:linear-gradient(135deg,#22C55E,#0BA360); border-radius:14px; padding:10px 14px;
+    cursor:pointer; user-select:none;
+    box-shadow:0 12px 18px -12px rgba(13,148,90,.8);
+  }
+  .foot { text-align:center; font-size:14px; color:#9AA6BA; margin-top:22px; }
+  .card {
+    background:#fff; border:2px solid #E2EFE7; border-radius:24px;
+    padding:16px; margin-bottom:14px;
+  }
+  .label { display:block; font-size:15px; font-weight:800; color:#8A95AA; margin:16px 0 8px; }
+  .field {
+    width:100%; padding:12px 14px; background:#fff; border:2px solid #E3EDE7;
+    border-radius:16px; font-size:18px; color:#172033; pointer-events:none;
+  }
+  .save {
+    margin-top:20px; width:100%; height:52px; border:0; border-radius:18px;
+    background:linear-gradient(135deg,#22C55E,#10B981 55%,#047857);
+    color:#fff; font-size:18px; font-weight:800; cursor:pointer;
+    box-shadow:0 16px 26px -14px rgba(13,148,90,.75);
+  }
+  .empty {
+    background:#fff; border-radius:24px; padding:50px 16px; text-align:center; color:#74819A;
+  }
+  .empty .e-title { display:block; font-size:22px; font-weight:800; color:#243042; margin-bottom:6px; }
+  .empty .e-sub { font-size:15px; color:#9AA6BA; }
+  .head-sub { font-size:15px; color:#74819A; margin-top:4px; }
+  .new-btn {
+    margin-top:18px; width:100%; height:52px; border-radius:18px;
+    background:linear-gradient(135deg,#22C55E,#0BA360); color:#fff;
+    font-size:18px; font-weight:800; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; box-shadow:0 16px 26px -14px rgba(16,150,90,.65);
+  }
+  .mask {
+    position:fixed; inset:0; background:rgba(15,23,42,.42);
+    display:none; align-items:center; justify-content:center; z-index:20; padding:24px;
+  }
+  .mask.show { display:flex; }
+  .modal {
+    width:100%; max-width:340px; background:#fff; border-radius:24px; padding:24px;
+    text-align:center;
+  }
+  .modal h3 { font-size:20px; font-weight:800; color:#101828; margin-bottom:12px; }
+  .modal p { font-size:16px; color:#55607A; line-height:1.7; }
+  .modal .btns { display:flex; gap:12px; margin-top:22px; }
+  .btn {
+    flex:1; height:46px; border-radius:16px; border:0; font-size:16px; font-weight:800; cursor:pointer;
+  }
+  .btn.cancel { background:#EAF0EA; color:#3F4A63; }
+  .btn.confirm { background:#FFF0F0; color:#D64550; }
+  .toast {
+    position:fixed; left:50%; bottom:34px; transform:translateX(-50%);
+    background:rgba(16,24,40,.86); color:#fff; font-size:15px;
+    padding:10px 20px; border-radius:999px; display:none; z-index:30;
+  }
+  .toast.show { display:block; }
+</style>
+</head>
+<body>
+  <div class="phone">
+    <!-- 打卡主页 -->
+    <section id="screen-home">
+      <div class="home-head">
+        <div>
+          <div class="kicker">9月8日 · 星期二</div>
+          <div class="title">上午好，测试1</div>
+          <div class="sub">今天也给自己打个卡吧</div>
+        </div>
+        <div class="avatar">测</div>
+      </div>
+
+      <div class="today-head">
+        <div>
+          <span class="th-title">今日打卡</span>
+          <span class="streak">✦ 已坚持 1 天</span>
+        </div>
+        <div class="done-chip"><span id="home-done">0</span> / <span id="home-total">0</span> 完成</div>
+      </div>
+
+      <div id="home-list"></div>
+      <div id="home-empty" class="empty" style="display:none">
+        <span class="e-title">还没有打卡目标</span>
+        <span class="e-sub">先设置一个想坚持的目标吧</span>
+      </div>
+
+      <div class="manage-card" onclick="showScreen('manage')" style="cursor:pointer">
+        <div class="manage-copy">
+          <span class="m-title">目标管理</span>
+          <span class="m-sub">共 <span id="manage-sub-count">0</span> 个目标 · 新增、修改、删除都在这里</span>
+        </div>
+        <div class="manage-btn">全部目标</div>
+      </div>
+      <div class="foot">记录只属于你自己，慢慢来也没关系</div>
+    </section>
+
+    <!-- 全部目标 -->
+    <section id="screen-manage" style="display:none">
+      <div class="bar">
+        <div class="back" onclick="showScreen('home')">‹</div>
+        <div class="nav-title">全部目标</div>
+      </div>
+      <div class="head-sub">包含今天不需要打卡的目标，共 <span id="manage-count">0</span> 个</div>
+      <div id="manage-list" style="margin-top:14px"></div>
+      <div class="new-btn" onclick="toast('预览版不含新建页，请在 App 中体验')">＋ 新目标</div>
+    </section>
+
+    <!-- 修改目标 -->
+    <section id="screen-edit" style="display:none">
+      <div class="bar">
+        <div class="back" onclick="showScreen('back')">‹</div>
+        <div class="nav-title">修改打卡目标</div>
+      </div>
+      <div class="label">目标名称</div>
+      <input class="field" id="edit-name">
+      <div class="label">具体任务</div>
+      <input class="field" id="edit-task">
+      <div class="label">提醒时间</div>
+      <input class="field" id="edit-time">
+      <button class="save" onclick="toast('预览版不含保存，请在 App 中体验')">保存修改</button>
+    </section>
+  </div>
+
+  <!-- 温柔确认弹窗 -->
+  <div class="mask" id="mask">
+    <div class="modal">
+      <h3>确定要删除这个目标吗？</h3>
+      <p>删除后，这个目标之前的打卡记录也会一起消失。别急着放弃——坚持本身就是很了不起的事，要不要再给自己几天？</p>
+      <div class="btns">
+        <button class="btn cancel" onclick="closeModal()">继续坚持</button>
+        <button class="btn confirm" onclick="doDelete()">仍要删除</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+  // 与线上清理后的数据一致
+  let goals = [
+    { id: 'g1', name: '增加', task: '1', freq: '每周 3 次 · 10:27 提醒', visible: true, done: false },
+    { id: 'g2', name: '减重', task: '一个月至少吃二十次减脂餐', freq: '每天 1 次 · 11:00 提醒', visible: true, done: true },
+    { id: 'g3', name: '停停停', task: '哈哈哈哈', freq: '每周 3 次 · 21:32 提醒', visible: true, done: false },
+    { id: 'g4', name: '测试', task: '1', freq: '每周 3 次 · 20:28 提醒', visible: true, done: false }
+  ]
+
+  let pending = null          // 待删除的目标
+  let pendingFrom = ''        // home / manage / edit
+  let editingGoal = null
+  let cameFrom = 'home'
+
+  const $ = id => document.getElementById(id)
+
+  function meta(g) {
+    return g.freq
+  }
+
+  function renderHome() {
+    const visible = goals.filter(g => g.visible)
+    const done = visible.filter(g => g.done).length
+    $('home-done').textContent = done
+    $('home-total').textContent = visible.length
+    $('home-empty').style.display = visible.length ? 'none' : 'block'
+    $('home-list').innerHTML = visible.map(g => `
+      <div class="goal-row">
+        <div class="check ${g.done ? 'done' : ''}" onclick="toggle('${g.id}')">✓</div>
+        <div class="goal-info">
+          <span class="g-name">${g.name}</span>
+          <span class="g-task">${g.task}</span>
+          <span class="g-meta">${meta(g)}</span>
+        </div>
+        <div class="home-edit" onclick="edit('${g.id}')">修改</div>
+      </div>`).join('')
+    $('manage-sub-count').textContent = goals.length
+  }
+
+  function renderManage() {
+    $('manage-count').textContent = goals.length
+    $('manage-list').innerHTML = goals.map(g => `
+      <div class="goal-row">
+        <div class="goal-info">
+          <span class="g-name">${g.name}${!g.visible ? '<span class="off-tag">今天无需打卡</span>' : ''}</span>
+          <span class="g-task">${g.task}</span>
+          <span class="g-meta">${meta(g)}</span>
+        </div>
+        <div class="g-actions">
+          <div class="g-act g-edit" onclick="edit('${g.id}')">修改</div>
+          <div class="g-act g-del" onclick="askDelete(goals.find(x=>x.id==='${g.id}'),'manage')">删除</div>
+        </div>
+      </div>`).join('')
+  }
+
+  function showScreen(name) {
+    if (name === 'back') name = cameFrom === 'manage' ? 'manage' : 'home'
+    cameFrom = 'home'
+    if (name === 'edit') cameFrom = document.getElementById('screen-manage').style.display !== 'none' ? 'manage' : 'home'
+    ;['home','manage','edit'].forEach(s => $('screen-' + s).style.display = s === name ? 'block' : 'none')
+  }
+
+  function toggle(id) {
+    const g = goals.find(x => x.id === id)
+    g.done = !g.done
+    renderHome()
+  }
+
+  function edit(id) {
+    editingGoal = goals.find(x => x.id === id)
+    if (!editingGoal) return
+    $('edit-name').value = editingGoal.name
+    $('edit-task').value = editingGoal.task
+    $('edit-time').value = editingGoal.freq.split('· ')[1] || ''
+    showScreen('edit')
+  }
+
+  function askDelete(g, from) {
+    pending = g
+    pendingFrom = from
+    $('mask').classList.add('show')
+  }
+
+  function closeModal() {
+    $('mask').classList.remove('show')
+    pending = null
+  }
+
+  function doDelete() {
+    if (!pending) return
+    const from = pendingFrom
+    goals = goals.filter(g => g.id !== pending.id)
+    renderHome()
+    renderManage()
+    closeModal()
+    if (from === 'edit') {
+      showScreen(cameFrom === 'manage' ? 'manage' : 'home')
+    }
+    toast('已删除')
+  }
+
+  let toastTimer = null
+  function toast(msg) {
+    const t = $('toast')
+    t.textContent = msg
+    t.classList.add('show')
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1500)
+  }
+
+  renderHome()
+  renderManage()
+</script>
+</body>
+</html>

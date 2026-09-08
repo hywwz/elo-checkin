@@ -14,7 +14,7 @@ const HORIZON_DAYS = 30
 const MAX_ALARMS = 450
 const RISK_HOUR = 22
 const RISK_MINUTE = 0
-const RISK_CHANNEL = { channelId: 'elo_reminder', channelName: '打卡提醒' }
+const RISK_CHANNEL = { channelId: 'elo_reminder_banner', channelName: '打卡提醒' }
 
 const MILESTONE_TEXTS = {
   7: '恭喜你完成连续打卡 7 天！你用自己的节奏，证明了坚持可以很温柔。',

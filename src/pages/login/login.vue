@@ -109,6 +109,12 @@ export default {
     }
   },
   onLoad() {
+    // 去掉独立加载页后：本地已有登录态就直接进打卡主页，
+    // token 若已失效，打卡页请求会返回 401 并自动退回登录页
+    if (uni.getStorageSync('eloToken')) {
+      uni.reLaunch({ url: '/pages/checkin/checkin' })
+      return
+    }
     this.account = uni.getStorageSync('eloAccount') || ''
     const remembered = uni.getStorageSync('eloRememberPwd')
     this.rememberPwd = remembered === true || remembered === 'true'

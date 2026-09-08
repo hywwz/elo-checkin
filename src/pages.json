@@ -1,12 +1,6 @@
 {
   "pages": [
     {
-      "path": "pages/launch/launch",
-      "style": {
-        "navigationStyle": "custom"
-      }
-    },
-    {
       "path": "pages/login/login",
       "style": {
         "navigationBarTitleText": "登录"

@@ -7,7 +7,7 @@ import NotificationChannel from 'android.app.NotificationChannel'
 import NotificationManager from 'android.app.NotificationManager'
 
 /** 默认通知渠道。 */
-const ELO_DEFAULT_CHANNEL_ID = 'elo_reminder'
+const ELO_DEFAULT_CHANNEL_ID = 'elo_reminder_banner'
 const ELO_DEFAULT_CHANNEL_NAME = '打卡提醒'
 
 /**
@@ -54,6 +54,7 @@ export function showNotificationByReceiver(
 	builder.setContentTitle(title)
 	builder.setContentText(content)
 	builder.setCategory(Notification.CATEGORY_REMINDER)
+	builder.setVisibility(Notification.VISIBILITY_PUBLIC)
 	builder.setAutoCancel(true)
 	builder.setPriority(Notification.PRIORITY_HIGH)
 	notificationManager.notify(id, builder.build())

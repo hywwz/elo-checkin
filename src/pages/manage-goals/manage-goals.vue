@@ -186,16 +186,15 @@ export default {
 .g-actions {
   flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  gap: 12rpx;
+  gap: 10rpx;
 }
 .g-act {
-  min-width: 76rpx;
+  min-width: 70rpx;
   text-align: center;
   font-size: 21rpx;
   font-weight: 700;
   border-radius: 18rpx;
-  padding: 10rpx 12rpx;
+  padding: 10rpx 14rpx;
 }
 .g-edit {
   color: #0b7a4e;

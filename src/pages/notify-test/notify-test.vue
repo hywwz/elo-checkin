@@ -148,7 +148,7 @@ export default {
         id: 90001,
         title: 'elo 打卡',
         content: '通知测试成功：样式、声音与横幅已就位。',
-        channelId: 'elo_reminder',
+        channelId: 'elo_reminder_banner',
         channelName: '打卡提醒'
       })
       this.result = id > 0 ? '已发送立即通知' : '发送失败，请先检查通知权限'
@@ -177,7 +177,7 @@ export default {
         id,
         title: 'elo 打卡提醒',
         content: customContent || '现在是做「阅读」的好时候，哪怕只花两分钟也可以。',
-        channelId: 'elo_reminder',
+        channelId: 'elo_reminder_banner',
         channelName: '打卡提醒',
         triggerAt,
         exact

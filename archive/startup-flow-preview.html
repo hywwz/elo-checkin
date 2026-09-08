@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>启动流程 · 去掉加载页预览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #dfe8e2;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 22px;
+  }
+  .layout { width: 100%; max-width: 420px; }
+  .controls {
+    background:#fff; border-radius:18px; padding:14px 16px; margin-bottom:16px;
+    box-shadow:0 10px 24px -16px rgba(20,65,46,.4);
+  }
+  .controls h3 { font-size:15px; color:#243042; margin-bottom:10px; }
+  .radio-row { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .radio {
+    border:2px solid #DDE7E1; border-radius:999px; padding:7px 14px;
+    font-size:14px; color:#3F4A63; cursor:pointer; user-select:none;
+  }
+  .radio.on { background:#E8F9F0; border-color:#8BD9AE; color:#0B7A4E; font-weight:700; }
+  .restart {
+    width:100%; height:44px; border:0; border-radius:14px; cursor:pointer;
+    background:linear-gradient(135deg,#22C55E,#0BA360); color:#fff;
+    font-size:15px; font-weight:800;
+  }
+  .phone {
+    border-radius:28px; overflow:hidden; position:relative; min-height:740px;
+    background:#F3F8F5; box-shadow:0 26px 60px -26px rgba(20,65,46,.5);
+  }
+  .screen { position:absolute; inset:0; display:none; }
+  .screen.show { display:flex; }
+
+  /* 系统启动图 */
+  #splash {
+    background:#fff; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .splash-logo {
+    width:110px; height:110px; border-radius:30px; background:#E9F0EC;
+    display:flex; align-items:center; justify-content:center;
+    font-size:52px; font-weight:800; color:#9FB3A7;
+  }
+  .splash-label { margin-top:18px; font-size:15px; color:#A5AEBE; }
+  .splash-note {
+    position:absolute; bottom:34px; font-size:12px; color:#C0C7D2; text-align:center;
+    padding:0 26px;
+  }
+
+  /* 登录页 */
+  #login { background:#F3F8F5; padding:70px 30px 30px; flex-direction:column; }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand-mark {
+    width:54px; height:54px; border-radius:18px;
+    background:linear-gradient(135deg,#22C55E,#0BA360); color:#fff;
+    font-size:30px; font-weight:800; display:flex; align-items:center; justify-content:center;
+  }
+  .brand-name { font-size:27px; font-weight:800; color:#171C28; display:block; }
+  .brand-sub { font-size:13px; color:#9BA6BC; letter-spacing:2px; display:block; }
+  .hello { margin-top:42px; }
+  .hello-title { font-size:44px; font-weight:800; color:#101828; display:block; }
+  .hello-sub { font-size:17px; color:#68738C; margin-top:8px; display:block; }
+  .field-group { margin-top:24px; }
+  .field-label { font-size:14px; font-weight:700; color:#3D465C; display:block; margin-bottom:8px; }
+  .field {
+    width:100%; height:52px; padding:0 16px; border:2px solid #E4E8F1;
+    border-radius:16px; font-size:16px; background:#fff; color:#172033;
+  }
+  .login-btn {
+    margin-top:26px; width:100%; height:54px; border:0; border-radius:17px; cursor:pointer;
+    background:linear-gradient(135deg,#22C55E,#10B981 55%,#047857); color:#fff;
+    font-size:17px; font-weight:800; letter-spacing:2px;
+  }
+  .to-login-note { text-align:center; margin-top:18px; font-size:13px; color:#8A95AA; }
+
+  /* 打卡页 */
+  #checkin { padding:20px 18px 24px; flex-direction:column; overflow:hidden; }
+  .checkin-head { display:flex; justify-content:space-between; align-items:center; }
+  .kicker { font-size:13px; color:#0E9F6E; font-weight:700; }
+  .greet { font-size:26px; font-weight:800; color:#101828; margin:4px 0 2px; }
+  .greet-sub { font-size:13px; color:#74819A; }
+  .avatar {
+    width:50px; height:50px; border-radius:16px; color:#fff; font-size:20px; font-weight:800;
+    background:linear-gradient(145deg,#22C55E,#047857);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .today-head { display:flex; justify-content:space-between; align-items:center; margin:22px 0 14px; }
+  .today-title { font-size:18px; font-weight:800; color:#243042; }
+  .streak {
+    font-size:12px; color:#0B7A4E; background:#E8F9F0; border:1px solid #BCEBCE;
+    border-radius:999px; padding:2px 9px; margin-left:6px;
+  }
+  .done-chip {
+    font-size:13px; color:#0B7A4E; background:#E8F9F0; border-radius:999px; padding:5px 11px;
+    font-weight:800;
+  }
+  .goal-row {
+    display:flex; align-items:center; gap:12px; background:#fff;
+    border:2px solid #E2EFE7; border-radius:18px; padding:12px 14px; margin-bottom:10px;
+    box-shadow:0 12px 24px -24px rgba(20,65,46,.8);
+  }
+  .check {
+    width:38px; height:38px; border-radius:50%; border:2px solid #C9D6E8;
+    display:flex; align-items:center; justify-content:center; color:transparent;
+    font-size:18px; flex-shrink:0; background:#fff;
+  }
+  .check.on { background:linear-gradient(135deg,#22C55E,#0BA360); border-color:transparent; color:#fff; }
+  .goal-info { flex:1; min-width:0; }
+  .goal-name { font-size:17px; font-weight:800; color:#243042; display:block; }
+  .goal-task { font-size:13px; color:#7E8CA3; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .goal-meta { font-size:12px; color:#A0AABE; display:block; margin-top:2px; }
+  .edit {
+    font-size:13px; color:#0B7A4E; background:#E8F9F0; border-radius:12px; padding:7px 12px;
+    font-weight:700; flex-shrink:0;
+  }
+  .manage-card {
+    display:flex; align-items:center; gap:10px; background:#fff; border:2px solid #E2EFE7;
+    border-radius:18px; padding:13px 15px; margin-top:2px; cursor:pointer;
+  }
+  .manage-copy { flex:1; min-width:0; }
+  .manage-title { font-size:15px; font-weight:800; color:#243042; display:block; }
+  .manage-sub { font-size:11px; color:#A0AABE; display:block; margin-top:2px; }
+  .manage-go {
+    font-size:13px; color:#fff; font-weight:800; background:linear-gradient(135deg,#22C55E,#0BA360);
+    border-radius:12px; padding:8px 12px; white-space:nowrap;
+  }
+  .demo-hint { font-size:12px; color:#9AA6BA; text-align:center; margin-top:16px; line-height:1.6; }
+  .toast {
+    position:absolute; left:50%; bottom:28px; transform:translateX(-50%);
+    background:rgba(16,24,40,.85); color:#fff; font-size:13px;
+    padding:8px 16px; border-radius:999px; display:none; white-space:nowrap;
+  }
+  .toast.show { display:block; }
+</style>
+</head>
+<body>
+  <div class="layout">
+    <div class="controls">
+      <h3>模拟冷启动状态</h3>
+      <div class="radio-row">
+        <div class="radio on" id="radio-logged" onclick="setMode('logged')">已登录（进打卡页）</div>
+        <div class="radio" id="radio-guest" onclick="setMode('guest')">未登录（进登录页）</div>
+      </div>
+      <button class="restart" onclick="restart()">重新打开 App</button>
+    </div>
+
+    <div class="phone">
+      <!-- 系统启动图（原生层，仅一层） -->
+      <div class="screen show" id="splash">
+        <div class="splash-logo">e</div>
+        <div class="splash-label">elo 打卡</div>
+        <div class="splash-note">系统启动图（模拟白色默认启动图）</div>
+      </div>
+
+      <!-- 未登录：直接进登录页 -->
+      <div class="screen" id="login">
+        <div class="brand">
+          <div class="brand-mark">e</div>
+          <div>
+            <span class="brand-name">elo</span>
+            <span class="brand-sub">Workplace</span>
+          </div>
+        </div>
+        <div class="hello">
+          <span class="hello-title">欢迎回来</span>
+          <span class="hello-sub">登录 elo 账号，继续你的高效工作</span>
+        </div>
+        <div class="field-group">
+          <span class="field-label">账号 *</span>
+          <input class="field" value="测试1" readonly>
+        </div>
+        <div class="field-group">
+          <span class="field-label">密码 *</span>
+          <input class="field" type="password" value="12345678" readonly>
+        </div>
+        <button class="login-btn" onclick="simulateLogin()">登 录</button>
+        <div class="to-login-note">还没有账号？立即注册</div>
+      </div>
+
+      <!-- 已登录：直接进打卡主页，中间不再出现 e 加载页 -->
+      <div class="screen" id="checkin">
+        <div class="checkin-head">
+          <div>
+            <div class="kicker">9月8日 · 星期二</div>
+            <div class="greet">上午好，测试1</div>
+            <div class="greet-sub">今天也给自己打个卡吧</div>
+          </div>
+          <div class="avatar">测</div>
+        </div>
+        <div class="today-head">
+          <div>
+            <span class="today-title">今日打卡</span>
+            <span class="streak">✦ 已坚持 1 天</span>
+          </div>
+          <div class="done-chip">1 / 4 完成</div>
+        </div>
+        <div class="goal-row">
+          <div class="check on">✓</div>
+          <div class="goal-info"><span class="goal-name">减重</span><span class="goal-task">一个月至少吃二十次减脂餐</span><span class="goal-meta">每天 1 次 · 11:00 提醒</span></div>
+          <div class="edit">修改</div>
+        </div>
+        <div class="goal-row">
+          <div class="check"></div>
+          <div class="goal-info"><span class="goal-name">增加</span><span class="goal-task">1</span><span class="goal-meta">每周 3 次 · 10:27 提醒</span></div>
+          <div class="edit">修改</div>
+        </div>
+        <div class="goal-row">
+          <div class="check"></div>
+          <div class="goal-info"><span class="goal-name">停停停</span><span class="goal-task">哈哈哈哈</span><span class="goal-meta">每周 3 次 · 21:32 提醒</span></div>
+          <div class="edit">修改</div>
+        </div>
+        <div class="goal-row">
+          <div class="check"></div>
+          <div class="goal-info"><span class="goal-name">测试</span><span class="goal-task">1</span><span class="goal-meta">每周 3 次 · 20:28 提醒</span></div>
+          <div class="edit">修改</div>
+        </div>
+        <div class="manage-card" onclick="toast('这是主页入口示意：点进去是“全部目标”管理页')">
+          <div class="manage-copy"><span class="manage-title">目标管理</span><span class="manage-sub">共 4 个目标 · 新增、修改、删除都在这里</span></div>
+          <div class="manage-go">全部目标</div>
+        </div>
+        <div class="demo-hint">演示启动衔接：系统启动图后直接进主页，<br>没有中间那页绿色 e 加载页</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  let mode = 'logged'
+  function setMode(m) {
+    mode = m
+    document.getElementById('radio-logged').classList.toggle('on', m === 'logged')
+    document.getElementById('radio-guest').classList.toggle('on', m === 'guest')
+    restart()
+  }
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('show'))
+    document.getElementById(id).classList.add('show')
+  }
+  function restart() {
+    show('splash')
+    setTimeout(() => show(mode === 'logged' ? 'checkin' : 'login'), 900)
+  }
+  function simulateLogin() {
+    mode = 'logged'
+    document.getElementById('radio-logged').classList.add('on')
+    document.getElementById('radio-guest').classList.remove('on')
+    show('checkin')
+    toast('登录成功，直接进入打卡主页')
+  }
+  let toastTimer = null
+  function toast(msg) {
+    const t = document.getElementById('toast')
+    t.textContent = msg
+    t.classList.add('show')
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1600)
+  }
+  restart()
+</script>
+</body>
+</html>

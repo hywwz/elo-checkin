@@ -28,7 +28,7 @@ export { AlarmReceiver } from './AlarmReceiver.uts'
 
 /** 接收器完整类名，与 AndroidManifest.xml 保持一致。 */
 const ALARM_RECEIVER_CLASS = 'uts.sdk.modules.eloNotify.AlarmReceiver'
-const DEFAULT_CHANNEL_ID = 'elo_reminder'
+const DEFAULT_CHANNEL_ID = 'elo_reminder_banner'
 const DEFAULT_CHANNEL_NAME = '打卡提醒'
 
 /**

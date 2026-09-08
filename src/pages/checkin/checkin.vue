@@ -43,10 +43,7 @@
             <text class="g-task">{{ g.task || '（未填写具体任务）' }}</text>
             <text class="g-meta">{{ goalMeta(g) }}</text>
           </view>
-          <view class="g-actions">
-            <view class="g-act g-edit" @click="editGoal(g)">修改</view>
-            <view class="g-act g-del" @click="askDelete(g)">删除</view>
-          </view>
+          <view class="g-edit" @click="editGoal(g)">修改</view>
         </view>
       </view>
 
@@ -60,15 +57,12 @@
         <text class="empty-sub">先设置一个想坚持的目标吧</text>
       </view>
 
-      <view class="manage-card">
+      <view class="manage-card" @click="goManageAll">
         <view class="manage-copy">
           <text class="m-title">目标管理</text>
-          <text class="m-sub">日日行，不怕千万里；常常做，不怕千万事。</text>
+          <text class="m-sub">共 {{ goals.length }} 个目标 · 新增、修改、删除都在这里</text>
         </view>
-        <view class="manage-actions">
-          <view class="manage-btn ghost" @click="goManageAll">全部目标</view>
-          <view class="manage-btn" @click="goNew">＋ 新目标</view>
-        </view>
+        <view class="manage-btn">全部目标</view>
       </view>
 
       <text class="foot-hint">记录只属于你自己，慢慢来也没关系</text>
@@ -79,7 +73,6 @@
 <script>
 import { get, post, del } from '../../utils/request.js'
 import { checkForAppUpdate } from '../../utils/app-update.js'
-import { confirmDeleteGoal } from '../../utils/goal-delete.js'
 // #ifdef APP-PLUS
 import {
   syncReminders,
@@ -199,17 +192,6 @@ export default {
       } catch (err) {
         // 请求层已提示
       }
-    },
-    askDelete(g) {
-      confirmDeleteGoal(async () => {
-        try {
-          await del(`/goals/${encodeURIComponent(g.id)}`)
-          uni.showToast({ title: '已删除', icon: 'success' })
-          await this.fetchGoals()
-        } catch (err) {
-          // 请求层已提示
-        }
-      })
     },
     checkMilestone(beforeStreak) {
       if (!achievementEnabled()) return
@@ -432,27 +414,15 @@ export default {
   color: #A0AABE;
   margin-top: 4rpx;
 }
-.g-actions {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10rpx;
-}
-.g-act {
-  min-width: 84rpx;
-  text-align: center;
-  font-size: 20rpx;
-  font-weight: 700;
-  border-radius: 16rpx;
-  padding: 8rpx 14rpx;
-}
 .g-edit {
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 21rpx;
+  font-weight: 700;
   color: #0B7A4E;
   background: #E8F9F0;
-}
-.g-del {
-  color: #C5484C;
-  background: #FFF2F2;
+  border-radius: 20rpx;
+  padding: 12rpx 20rpx;
 }
 .empty {
   margin-top: 40rpx;
@@ -500,25 +470,16 @@ export default {
   color: #A0AABE;
   margin-top: 4rpx;
 }
-.manage-actions {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-}
 .manage-btn {
-  font-size: 24rpx;
+  flex-shrink: 0;
+  font-size: 22rpx;
   font-weight: 800;
   color: #fff;
   background: linear-gradient(135deg, #22C55E, #0BA360);
   border-radius: 24rpx;
-  padding: 18rpx 26rpx;
+  padding: 18rpx 24rpx;
+  white-space: nowrap;
   box-shadow: 0 14rpx 24rpx -12rpx rgba(13, 148, 90, 0.8);
-}
-.manage-btn.ghost {
-  color: #0B7A4E;
-  background: #E8F9F0;
-  box-shadow: none;
 }
 .foot-hint {
   display: block;
