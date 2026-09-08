@@ -134,7 +134,7 @@ git push -u origin master
    - 名字：`elo-backend`；
    - 镜像：`ghcr.io/hywwz/elo-backend:latest`（必须是公开镜像才能拉取）；
    - 端口：容器内 `3000`；
-   - 环境变量：`ADMIN_ACCOUNTS=测试1`（管理员账号，多个用逗号）；
+   - 环境变量：`ADMIN_ACCOUNTS=你自己定的管理员账号`（如 `elo-admin`，多个用逗号；**不要用测试1/公开过的账号**）；
 3. **持久化（最重要的一步）**：把存储挂载到 `/app/data`。否则容器一重建，数据库文件就丢了，用户数据全没；
 4. 部署完成后平台给你一个 https 地址，形如 `https://xxxx.cloud.sealos.io`。
 

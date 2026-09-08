@@ -2,7 +2,9 @@ import crypto from 'node:crypto'
 import { db, nowIso } from './db.js'
 
 const TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000
-const ADMIN_ACCOUNTS = String(process.env.ADMIN_ACCOUNTS || '测试1')
+// 管理员名单只从环境变量 ADMIN_ACCOUNTS 读取；未配置时没有任何管理员，管理员接口一律拒绝。
+// 不要在这里内置默认管理员账号（如 测试1），避免公开密码成为后门。
+const ADMIN_ACCOUNTS = String(process.env.ADMIN_ACCOUNTS || '')
   .split(',')
   .map(s => s.trim().toLowerCase())
   .filter(Boolean)
