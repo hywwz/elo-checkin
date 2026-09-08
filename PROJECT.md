@@ -66,6 +66,13 @@
 - 手动检查更新增加“当前已是最新版本”提示
 - 修复小米手机横幅通知不弹出：改用新通知渠道 `elo_reminder_banner`（高优先级 + 锁屏可见）；若仍不弹，多为系统勿扰/专注模式压制横幅
 
+### v1.0.4 之后：安全与工具完善（master 开发中，未发 App 版）
+
+- 移除默认管理员兜底：`ADMIN_ACCOUNTS` 未配置时没有任何管理员（管理员接口一律拒绝），管理员必须在 Sealos 环境变量显式指定，不再默认“测试1”
+- 新增数据库备份脚本与指南：`server/backup-db.js`（本地 `npm run backup` / 线上 `node backup-db.js`），说明见 `BACKUP-GUIDE.md`
+- 新增发版版本号脚本：`npm run release:bump -- 1.0.5`，一次同步 manifest / 前端常量 / 后端更新信息
+- `feat/delete-goal-management` 分支已推送到 GitHub 远程备份
+
 ### 2026-09-08 踩坑记录与解决方案
 
 | # | 问题现象 | 根因 | 解决方案 |
@@ -373,7 +380,7 @@ https://github.com/hywwz/elo-checkin/releases/download/v1.0.4/elo-checkin-v1.0.4
 
 ### 7.6 Git 标签与版本对应
 
-仓库按开发阶段打了 4 个标签（都在 master 同一条历史上），对应关系如下：
+仓库按开发阶段打了多个发布标签（都在 master 同一条历史上），对应关系如下：
 
 | 标签 | 指向节点 | 阶段 | 含义 |
 | --- | --- | --- | --- |
@@ -384,7 +391,7 @@ https://github.com/hywwz/elo-checkin/releases/download/v1.0.4/elo-checkin-v1.0.4
 | `v1.0.2`（未打标签） | `f949ffa` | 内部正式包 | 本地通知插件 / 三类提醒 / 提醒开关 / targetSdk 34 |
 | `v1.0.3` | `693cb90`（标签已固定） | v1.0.3 正式发布 | 系统原生时间滚轮 / 输入框对齐 / 账号页间距 / GitHub Releases 分发 |
 | `v1.0.4` | `ea2c94e`（标签已固定） | v1.0.4 正式发布 | 目标管理（删除/全部目标入口） / 去加载页 / 小米横幅通知修复 |
-| （master） | 最新提交 `ea2c94e` | v1.0.5 开发中 | 待定 |
+| （master） | 最新提交 `756b935` | v1.0.5 开发中 | 管理员账号安全加固 / 备份与发版脚本（未发 App 版） |
 
 约定：
 - v0.x 是过程存档点，v1.x 才是对外版本；
