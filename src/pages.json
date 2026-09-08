@@ -61,6 +61,12 @@
       }
     },
     {
+      "path": "pages/manage-goals/manage-goals",
+      "style": {
+        "navigationBarTitleText": "全部目标"
+      }
+    },
+    {
       "path": "pages/statistics/statistics",
       "style": {
         "navigationBarTitleText": "统计"
