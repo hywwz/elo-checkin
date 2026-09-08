@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "backup": "node backup-db.js"
   }
 }

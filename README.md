@@ -18,6 +18,7 @@
 - [项目笔记与发布复盘](PROJECT.md)
 - [后端接口文档](backend-api.md)
 - [App 安装与使用说明（可直接转发）](INSTALL-GUIDE.md)
+- [数据库备份指南](BACKUP-GUIDE.md)
 
 ---
 

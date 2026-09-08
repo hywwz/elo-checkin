@@ -33,7 +33,8 @@
     "build:mp-xhs": "uni build -p mp-xhs",
     "build:quickapp-webview": "uni build -p quickapp-webview",
     "build:quickapp-webview-huawei": "uni build -p quickapp-webview-huawei",
-    "build:quickapp-webview-union": "uni build -p quickapp-webview-union"
+    "build:quickapp-webview-union": "uni build -p quickapp-webview-union",
+    "release:bump": "node scripts/bump-version.mjs"
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-5020420260813003",
