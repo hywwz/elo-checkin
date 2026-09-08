@@ -88,13 +88,20 @@ export const API_BASE_URL = 'http://192.168.1.10:3000/v1'
 
 ### 5. 数据备份（最重要）
 
-数据只存在一个文件：
+数据存在 `server/data/elo.db`（WAL 模式，旁边会有 `-wal` / `-shm` 临时文件）。
 
-```text
-server/data/elo.db
+备份（服务运行中也能安全备份）：
+
+```bash
+cd server
+npm run backup
 ```
 
-备份 = 定期把这个文件复制一份（最好在服务器停止时复制）。恢复 = 把备份文件放回原位置再启动。
+产物：`server/data/backups/elo-时间戳.db`
+
+恢复：把备份文件改名回 `elo.db` 放回 `server/data/`，再启动即可。
+
+详细说明见 [BACKUP-GUIDE.md](BACKUP-GUIDE.md)。
 
 ---
 
