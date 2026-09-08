@@ -19,6 +19,8 @@
 - [后端接口文档](backend-api.md)
 - [App 安装与使用说明（可直接转发）](INSTALL-GUIDE.md)
 - [数据库备份指南](BACKUP-GUIDE.md)
+- [状态速查与决定](ROADMAP.md)
+- [每个文件是干什么的（文件导航）](FILEMAP.md)
 
 ---
 

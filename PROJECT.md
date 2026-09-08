@@ -20,7 +20,7 @@
 | 后端（Sealos） | ✅ 运行中，更新接口已上线 | https://cywspqlnlffd.cloud.sealos.io |
 | Android App | ✅ v1.0.4 正式发布（com.elo.checkin / targetSdk 34） | APK 与更新地址见下方 v1.0.4 摘要 |
 | 微信小程序 | ⏸ 不再继续开发，未来只做 Android App | 保留体验版 v1.0.1 |
-| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.4） |
+| 本地代码 | ✅ 干净可构建 | master 分支（v1.0.4 + v1.0.5 开发中） |
 | 接口文档 | ✅ | [backend-api.md](backend-api.md) |
 
 ---
@@ -72,6 +72,8 @@
 - 新增数据库备份脚本与指南：`server/backup-db.js`（本地 `npm run backup` / 线上 `node backup-db.js`），说明见 `BACKUP-GUIDE.md`
 - 新增发版版本号脚本：`npm run release:bump -- 1.0.5`，一次同步 manifest / 前端常量 / 后端更新信息
 - `feat/delete-goal-management` 分支已推送到 GitHub 远程备份
+- 新增 ROADMAP.md（状态速查与决定）与 FILEMAP.md（逐文件导航）
+- 清理无引用的历史图标变体与模板 logo（可在 git 历史找回）
 
 ### 2026-09-08 踩坑记录与解决方案
 
@@ -146,6 +148,9 @@ src/
 | [TEMPLATE-GUIDE.md](TEMPLATE-GUIDE.md) | 想复用代码的人 | 前后端框架拆解、加功能路径、迁移新项目清单 |
 | [backend-api.md](backend-api.md) | 前端/接口对接 | 全部接口字段与示例 |
 | [INSTALL-GUIDE.md](INSTALL-GUIDE.md) | App 使用者 | 安装、权限、小米后台设置、常见问题 |
+| [BACKUP-GUIDE.md](BACKUP-GUIDE.md) | 需要备份数据的人 | 本地与 Sealos 线上备份步骤 |
+| [ROADMAP.md](ROADMAP.md) | 想快速回状态的人 | 当前状态、做过的决定、下一版动作 |
+| [FILEMAP.md](FILEMAP.md) | 想找文件的人 | 每个文件干什么的文件导航 |
 | [README.md](README.md) | 所有人 | 项目介绍与快速入口 |
 
 ---
@@ -299,7 +304,7 @@ C:\Users\27487\Desktop\a5eafc6a6d3ed1cfaaf9447309e0199e.jpg（896×854 设计稿
 | xxhdpi | 144×144 | `xxhdpi` | `src/static/app-icon-144.png` |
 | xxxhdpi | 192×192 | `xxxhdpi` | `src/static/app-icon-192.png` |
 
-注意：只重新 `npx uni build -p app` 不会自动换图标，必须先在 `src/manifest.json` 中写入 `icons` 配置再编译，HBuilderX 云打包才会使用新图。源码目录中还保留了历史过程稿 `app-icon.png`（E 字版）、`app-icon-check.png`（打勾版）、`app-icon-echeck.png`（E + 勾预览版）与 `archive/app-icon-preview.png` 对比图，均未删除。
+注意：只重新 `npx uni build -p app` 不会自动换图标，必须先在 `src/manifest.json` 中写入 `icons` 配置再编译，HBuilderX 云打包才会使用新图。历史过程稿（E 字版、打勾版、E + 勾预览版等）已清理，如需回看可在 git 历史中找回。
 
 正式图标预览（源图保存在仓库 `src/static/` 下）：
 
