@@ -69,13 +69,18 @@
         <view v-if="loading" class="spinner"></view>
         <text>{{ loading ? '正在保存…' : '保存修改' }}</text>
       </button>
+
+      <button class="delete" :disabled="loading || deleting" @click="askDelete">
+        <text>{{ deleting ? '正在删除…' : '删除这个目标' }}</text>
+      </button>
     </view>
 
   </view>
 </template>
 
 <script>
-import { get, put } from '../../utils/request.js'
+import { get, put, del } from '../../utils/request.js'
+import { confirmDeleteGoal } from '../../utils/goal-delete.js'
 
 const hourLabels = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
 const minuteLabels = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'))
@@ -103,6 +108,7 @@ export default {
       tpHour: 21,
       tpMin: 30,
       loading: false,
+      deleting: false,
       errors: {}
     }
   },
@@ -208,6 +214,21 @@ export default {
       } catch (err) {
         this.loading = false
       }
+    },
+    askDelete() {
+      if (this.deleting || !this.goalId) return
+      confirmDeleteGoal(async () => {
+        this.deleting = true
+        try {
+          await del(`/goals/${encodeURIComponent(this.goalId)}`)
+          uni.showToast({ title: '目标已删除', icon: 'success' })
+          setTimeout(() => {
+            uni.reLaunch({ url: '/pages/checkin/checkin' })
+          }, 800)
+        } catch (err) {
+          this.deleting = false
+        }
+      })
     }
   }
 }
@@ -394,6 +415,24 @@ export default {
   box-shadow: 0 24rpx 40rpx -18rpx rgba(13, 148, 90, 0.75);
 }
 .save::after {
+  border: 0;
+}
+.delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14rpx;
+  margin-top: 24rpx;
+  width: 100%;
+  height: 92rpx;
+  border-radius: 30rpx;
+  font-size: 27rpx;
+  font-weight: 700;
+  color: #C5484C;
+  background: #FFF6F6;
+  border: 2rpx solid #F5D8D9;
+}
+.delete::after {
   border: 0;
 }
 .spinner {
